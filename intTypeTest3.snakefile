@@ -15,7 +15,7 @@ for d in eventsPath:
             e = d.replace(asmPath, "")
             eventsASM.append(e)
 
-REF = "/projects/alignment_references/9606/hg38_no_alt_TCGA_HTMCP_HPVs/genome/minimap2-2.15-map-ont/hg38_no_alt_TCGA_HTMCP_HPVs_map-ont.mmi"
+REF = config["GENOME_MMI"]
 
 ### -------------------------------------------------------------------
 ### Target rule

@@ -1,16 +1,10 @@
 #!/gsc/software/linux-x86_64-centos7/R-4.0.2/bin/Rscript --vanilla
-.libPaths("/projects/vporter_prj/R/x86_64-centos7-linux-gnu-library/4.0")
 
 #Note: these packages need to be installed.
 suppressMessages(require(data.table))
 suppressMessages(require(optparse))
 suppressMessages(require(dplyr))
 
-
-# practice files
-#experimental_depths = fread("/projects/hpv_nanopore_prj/htmcp/call_integration/output/HTMCP-03-06-02063/cn/event1/region_depth_mean.bed")
-#segments = fread("/projects/hpv_nanopore_prj/htmcp/ploidetect/illumina/Ploidetect-pipeline/ploidetect_out/HTMCP-03-06-02063/A37266_A37194/cna_condensed.txt")
-#ploidy_file = fread("/projects/hpv_nanopore_prj/htmcp/ploidetect/illumina/Ploidetect-pipeline/ploidetect_out/HTMCP-03-06-02063/A37266_A37194/models.txt")
 
 # Make help options
 option_list = list(

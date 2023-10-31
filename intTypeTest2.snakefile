@@ -10,7 +10,7 @@ events = [f for f in os.listdir(intPath) if not f.startswith('.')]
 eventsPath = [intPath + s for s in events]
 
 # genes
-gene_gff = "/gsc/resources/annotation/snpeff/snpeff_binaries/5.0/data/GRCh38.100/genes.gtf"
+gene_gff = config["GENES_PATH"]
 
 # two-break events
 tbe = []
@@ -27,7 +27,8 @@ for d in eventsPath:
 rule all:
 	input:
 		expand("output/{sample}/intType/{event}/intTest2.txt", sample=SAMPLE, event=tbe),
-        expand("output/{sample}/intType/{event}/genic_test/event_location.txt" , sample=SAMPLE, event=tbe)
+        expand("output/{sample}/intType/{event}/genic_test/event_location.txt" , sample=SAMPLE, event=tbe),
+        expand("output/{sample}/methylation/regions/{event}/methylregions.bed", sample=SAMPLE, event=tbe)
 
 ### -------------------------------------------------------------------
 ### get depth of regions before and after integration sites
@@ -108,3 +109,45 @@ rule intTest2:
     shell:
         "DEPTH={input} python scripts/intTypeTestTwoBreak.py > {output}"
 
+### -------------------------------------------------------------------
+### get the regions upstream, downstream, and in between the integration sites
+### -------------------------------------------------------------------
+
+rule regionize_event:
+    input:
+        "output/{sample}/intType/{event}/{event}_region.bed"
+    output:
+        "output/{sample}/intType/{event}/{event}_regions_updown.bed"
+    run:
+        df = pd.read_csv(input[0], sep='\t', lineterminator='\n', names = ["chr","start","end"])
+        start = df["start"][0]
+        end = df["end"][0]
+        chrom = df["chr"][0]
+        dist = end - start
+        if (dist < 10000):
+            out = {'chr': [chrom,chrom,chrom], 'start': [start-5000,start,end], 'end': [start,end,end+5000],'region': ["5_upstream","inside","3_downstream"]}
+        else:
+            out = {'chr': [chrom,chrom,chrom,chrom], 'start': [start-5000,start,end-5000,end], 'end': [start,start+5000,end,end+5000],'region': ["5_upstream","5_downstream", "3_upstream","3_downstream"]}
+        outDF = pd.DataFrame(data=out)
+        pd.DataFrame.to_csv(outDF, path_or_buf = output[0], sep = '\t', header = False, index = False)
+
+rule methyl_bed:
+    input:
+        methyl = "output/{sample}/methylation/event_methyl_freq.tsv"
+    output:
+        "output/{sample}/methylation/event_methyl_freq.bed"
+    shell:
+        """
+        cat {input.methyl} | tail -n +2 | awk '{{print $1"\t"$2"\t"$2+1"\t"$3"\t"$4"\t"$5"\t"$6"\t"$7}}' > {output}
+        """
+
+rule methyl_freq_updown:
+    input:
+        regions = "output/{sample}/intType/{event}/{event}_regions_updown.bed",
+        methyl = "output/{sample}/methylation/event_methyl_freq.bed"
+    output:
+        "output/{sample}/methylation/regions/{event}/methylregions.bed"
+    shell:
+        """
+        bedtools intersect -wb -a {input.methyl} -b {input.regions} > {output}
+        """

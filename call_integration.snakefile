@@ -1,9 +1,7 @@
-# sample list
-#with open ("methyl_libraries", "r") as file:
-#       SAMPLES = file.read().split("\n")
-#del SAMPLES[-1]
 import os
 SAMPLES = os.environ.get("SAMPLES")
+
+GENOME_REF = config["GENOME_MMI"]
 
 ### -------------------------------------------------------------------
 ### Target rule
@@ -11,9 +9,9 @@ SAMPLES = os.environ.get("SAMPLES")
 rule all:
 	input:
 		expand("output/{sample}/bam/hpv_reads.bam.bai", sample=SAMPLES),
-		expand("output/{sample}/bam/methyl_hpv_reads.bam.bai", sample=SAMPLES),
-		expand("output/{sample}/methylation/hpv_methylation_frequency.tsv", sample=SAMPLES),
-        expand("output/{sample}/methylation/event_methyl_freq.tsv", sample=SAMPLES),
+		#expand("output/{sample}/bam/methyl_hpv_reads.bam.bai", sample=SAMPLES),
+		#expand("output/{sample}/methylation/hpv_methylation_frequency.tsv", sample=SAMPLES),
+        #expand("output/{sample}/methylation/event_methyl_freq.tsv", sample=SAMPLES),
         expand("output/{sample}/.combined/events_combined1.txt", sample=SAMPLES),
 		expand("output/{sample}/.combined/events_combined2.txt", sample=SAMPLES),
 		expand("output/{sample}/.combined/events_combined3.txt", sample=SAMPLES),
@@ -54,7 +52,7 @@ rule filter_HPV_methyl_reads:
         names="output/{sample}/bam/hpv_read_names.txt",
         bam="output/{sample}/bam/methyl_reads.sorted.bam"
     output:
-        "{sample}/bam/methyl_hpv_reads.bam"
+        "output/{sample}/bam/methyl_hpv_reads.bam"
     shell:
         "picard FilterSamReads -I {input.bam} -O {output} -READ_LIST_FILE {input.names} -FILTER includeReadList -VALIDATION_STRINGENCY SILENT"
 
@@ -84,7 +82,7 @@ rule HPV_paf_reads:
     output:
         "output/{sample}/bam/hpv_reads.paf"
     shell:
-        "minimap2 -cx map-ont /projects/alignment_references/9606/hg38_no_alt_TCGA_HTMCP_HPVs/genome/minimap2-2.15-map-ont/hg38_no_alt_TCGA_HTMCP_HPVs_map-ont.mmi {input.fasta} > {output}"
+        "minimap2 -cx map-ont GENOME_REF {input.fasta} > {output}"
 
 ### -------------------------------------------------------------------
 ### Subset the methylation information to the HPV reads
@@ -127,7 +125,7 @@ checkpoint call_integration:
     output:
         directory("output/{sample}/events")
     shell:
-        "/projects/vporter_prj/git-repo/hpv-integration/vporter-hpv-integration/callHPVintegration.R -v {input.vcf} -o {output}"
+        "scripts/callHPVintegration.R -v {input.vcf} -o {output}"
 
 ### -------------------------------------------------------------------
 ### Subset the methylation by event 
@@ -139,7 +137,7 @@ rule hpv_methyl_freq:
     output:
         "output/{sample}/methylation/event_methyl_freq.tsv"
     shell: 
-        "/projects/vporter_prj/git-repo/hpv-integration/vporter-hpv-integration/eventMethylation.R -m {input.tsv} -d {wildcards.sample}/events -o {output}"
+        "scripts/eventMethylation.R -m {input.tsv} -d output/{wildcards.sample}/events -o {output}"
 
 ### -------------------------------------------------------------------
 ### Make bams and fastas for individual events
@@ -223,7 +221,7 @@ rule flye:
         "output/{sample}/asm/event{i}/assembly.fasta"
     threads: 10
     shell:
-        "flye --nano-raw {input.fastq} -i 3 -t {threads} -o {wildcards.sample}/asm/event{wildcards.i}"
+        "flye --nano-raw {input.fastq} -i 3 -t {threads} -o output/{wildcards.sample}/asm/event{wildcards.i}"
 
 ### -------------------------------------------------------------------
 ### Map the assemblies
@@ -235,14 +233,14 @@ rule map_asm_ref_paf:
     output:
         "output/{sample}/asm/event{i}/assembly.hybrid.paf"
     shell:
-        "minimap2 -x asm5 /projects/alignment_references/9606/hg38_no_alt_TCGA_HTMCP_HPVs/genome/minimap2-2.15-map-ont/hg38_no_alt_TCGA_HTMCP_HPVs_map-ont.mmi {input} > {output}"
+        "minimap2 -x asm5 GENOME_REF {input} > {output}"
 
 rule map_reads_asm_paf:
     input:
         reads="output/{sample}/events/event{i}.fastq",
         asm="output/{sample}/asm/event{i}/assembly.fasta"
     output:
-        "{sample}/asm/event{i}/reads.asm.paf"
+        "output/{sample}/asm/event{i}/reads.asm.paf"
     shell:
         "minimap2 -L --MD -Y -x map-ont {input.asm} {input.reads} > {output}"
 
@@ -271,7 +269,7 @@ rule sort_reads_asm:
     input:
         bam="output/{sample}/asm/event{i}/reads.asm.bam"
     output:
-        "{sample}/asm/event{i}/reads.asm.sorted.bam"
+        "output/{sample}/asm/event{i}/reads.asm.sorted.bam"
     shell:
         "sambamba sort {input.bam}"
 
@@ -295,7 +293,7 @@ rule repeat_master:
         "output/{sample}/intTypeTest/event{i}/.scratch/reads.fasta.out.gff"
     threads: 20
     shell:
-        "singularity exec -B /projects,/home /projects/vporter_prj/tools/repeatmasker_4.1.2.p1--pl5321hdfd78af_1.sif RepeatMasker {input.fasta} -pa {threads} -gff -species human"
+        "singularity exec -B /projects,/home repeatmasker_4.1.2.p1--pl5321hdfd78af_1.sif RepeatMasker {input.fasta} -pa {threads} -gff -species human"
 
 ### -------------------------------------------------------------------
 ### get regions before and after integration sites

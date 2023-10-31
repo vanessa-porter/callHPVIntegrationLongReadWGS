@@ -2,4 +2,4 @@
 samples:
     HTMCP-03-06-02058:
         tumour:
-            /projects/analysis/analysis32/A37261/merge78088_mmp2-2.15/125bp/hg38_no_alt_TCGA_HTMCP_HPVs/A37261_4_lanes_dupsFlagged.bam
+            /path/to/sample.bam
