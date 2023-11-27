@@ -1,6 +1,8 @@
 import os
 import pandas as pd
-SAMPLE = os.environ.get("SAMPLE")
+
+samples_dict = config["samples"]
+sample_ids = samples_dict.keys()
 
 # get the events for the sample
 intPath = "output/" + SAMPLE + "/intType/"
@@ -26,9 +28,9 @@ for d in eventsPath:
 ### -------------------------------------------------------------------
 rule all:
 	input:
-		expand("output/{sample}/intType/{event}/intTest2.txt", sample=SAMPLE, event=tbe),
-        expand("output/{sample}/intType/{event}/genic_test/event_location.txt" , sample=SAMPLE, event=tbe),
-        expand("output/{sample}/methylation/regions/{event}/methylregions.bed", sample=SAMPLE, event=tbe)
+		expand("output/{sample}/intType/{event}/intTest2.txt", sample=sample_ids, event=tbe),
+        expand("output/{sample}/intType/{event}/genic_test/event_location.txt" , sample=sample_ids, event=tbe),
+        expand("output/{sample}/methylation/regions/{event}/methylregions.bed", sample=sample_ids, event=tbe)
 
 ### -------------------------------------------------------------------
 ### get depth of regions before and after integration sites

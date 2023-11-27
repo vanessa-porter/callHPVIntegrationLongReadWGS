@@ -1,5 +1,23 @@
 # sample name must match the sample ID on the RPKM matrix
 samples:
-    HTMCP-03-06-02058:
-        tumour:
-            /path/to/sample.bam
+    sample_name:
+        bam:
+            /path/to/whole_genome_sample.bam
+        methyl_bam:
+            /path/to/methyl_sample.bam
+        HP1_bam:
+            /path/to/HP1_sample.bam
+        HP2_bam:
+            /path/to/HP2_sample.bam
+        methyl_freq:
+            /path/to/methylation_frequency.tsv
+        HP1_methyl_freq:
+            /path/to/HP1_methylation_frequency.tsv
+        HP2_methyl_freq:
+            /path/to/HP2_methylation_frequency.tsv
+        phase_blocks:
+            /path/to/phased_merge_output.vcf.gz
+        all_methyl:
+            /path/to/methylation.tsv
+        
+        

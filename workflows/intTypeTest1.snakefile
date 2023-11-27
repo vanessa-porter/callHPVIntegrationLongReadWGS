@@ -1,6 +1,7 @@
 import os
 import pandas as pd
-SAMPLE = os.environ.get("SAMPLE")
+samples_dict = config["samples"]
+sample_ids = samples_dict.keys()
 
 # get the events for the sample
 eventsPath = "output/" + SAMPLE + "/events/summary.txt"
@@ -16,11 +17,11 @@ if (none > 0):
 ### -------------------------------------------------------------------
 rule all:
 	input:
-            expand("output/{sample}/intType/{event}/intTest1.txt", sample=SAMPLE, event=EVENTS),
+            expand("output/{sample}/intType/{event}/intTest1.txt", sample=sample_ids, event=EVENTS),
             #expand("output/{sample}/cn/{event}/regionsMeanDepth.bed", sample=SAMPLE, event=EVENTS),
             #expand("output/{sample}/cn/{event}/breakpoint_merge.bed", sample=SAMPLE, event=EVENTS),
-            expand("output/{sample}/events/{event}_SVsubset.bedpe", sample=SAMPLE, event=EVENTS),
-            expand("output/{sample}/events/{event}_SVsubset.bed", sample=SAMPLE, event=EVENTS)
+            expand("output/{sample}/events/{event}_SVsubset.bedpe", sample=sample_ids, event=EVENTS),
+            expand("output/{sample}/events/{event}_SVsubset.bed", sample=sample_ids, event=EVENTS)
 
 ### -------------------------------------------------------------------
 ### RepeatMaster

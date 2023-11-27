@@ -1,6 +1,7 @@
 import os
 import pandas as pd
-SAMPLE = os.environ.get("SAMPLE")
+samples_dict = config["samples"]
+sample_ids = samples_dict.keys()
 EVENT = os.environ.get("EVENT")
 
 dmrPaths = '/path/to/dmr_file_locations.txt'
@@ -10,7 +11,7 @@ dmrPaths = '/path/to/dmr_file_locations.txt'
 ### -------------------------------------------------------------------
 rule all:
 	input:
-            expand("output/{sample}/event_phase/{event}/dmr_permute/plottingDensityValues.txt", sample=SAMPLE, event=EVENT)
+            expand("output/{sample}/event_phase/{event}/dmr_permute/plottingDensityValues.txt", sample=sample_ids, event=EVENT)
 
 ### -------------------------------------------------------------------
 ### DMR Hotspots

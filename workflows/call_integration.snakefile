@@ -1,5 +1,7 @@
 import os
-SAMPLES = os.environ.get("SAMPLES")
+# samples
+samples_dict = config["samples"]
+sample_ids = samples_dict.keys()
 
 GENOME_REF = config["GENOME_MMI"]
 
@@ -8,15 +10,15 @@ GENOME_REF = config["GENOME_MMI"]
 ### -------------------------------------------------------------------
 rule all:
 	input:
-		expand("output/{sample}/bam/hpv_reads.bam.bai", sample=SAMPLES),
-		#expand("output/{sample}/bam/methyl_hpv_reads.bam.bai", sample=SAMPLES),
-		#expand("output/{sample}/methylation/hpv_methylation_frequency.tsv", sample=SAMPLES),
-        #expand("output/{sample}/methylation/event_methyl_freq.tsv", sample=SAMPLES),
-        expand("output/{sample}/.combined/events_combined1.txt", sample=SAMPLES),
-		expand("output/{sample}/.combined/events_combined2.txt", sample=SAMPLES),
-		expand("output/{sample}/.combined/events_combined3.txt", sample=SAMPLES),
-        expand("output/{sample}/.combined/events_combined4.txt", sample=SAMPLES),
-        expand("output/{sample}/.combined/events_combined5.txt", sample=SAMPLES)
+		expand("output/{sample}/bam/hpv_reads.bam.bai", sample=sample_ids),
+		expand("output/{sample}/bam/methyl_hpv_reads.bam.bai", sample=sample_ids),
+		expand("output/{sample}/methylation/hpv_methylation_frequency.tsv", sample=sample_ids),
+        expand("output/{sample}/methylation/event_methyl_freq.tsv", sample=sample_ids),
+        expand("output/{sample}/.combined/events_combined1.txt", sample=sample_ids),
+		expand("output/{sample}/.combined/events_combined2.txt", sample=sample_ids),
+		expand("output/{sample}/.combined/events_combined3.txt", sample=sample_ids),
+        expand("output/{sample}/.combined/events_combined4.txt", sample=sample_ids),
+        expand("output/{sample}/.combined/events_combined5.txt", sample=sample_ids)
 
 ### -------------------------------------------------------------------
 ### Creating the HPV-only bam files
@@ -24,7 +26,7 @@ rule all:
 
 rule select_HPV_reads:
     input:
-        bam="output/{sample}/bam/all_reads.sorted.bam"
+        bam=lambda w: config["samples"][w.sample]["bam"]
     output:
         "output/{sample}/bam/hpv_read_names.txt"
     shell:
@@ -50,7 +52,7 @@ rule index_HPV_reads:
 rule filter_HPV_methyl_reads:
     input:
         names="output/{sample}/bam/hpv_read_names.txt",
-        bam="output/{sample}/bam/methyl_reads.sorted.bam"
+        bam=lambda w: config["samples"][w.sample]["methyl_bam"]
     output:
         "output/{sample}/bam/methyl_hpv_reads.bam"
     shell:
@@ -91,7 +93,7 @@ rule HPV_paf_reads:
 rule methyl_hpv_reads:
     input:
         names="output/{sample}/bam/hpv_read_names.txt",
-        tsv="output/{sample}/methylation/methylation.tsv"
+        tsv=lambda w: config["samples"][w.sample]["all_methyl"]
     output:
         "output/{sample}/methylation/hpv_reads_methylation.tsv"
     shell:

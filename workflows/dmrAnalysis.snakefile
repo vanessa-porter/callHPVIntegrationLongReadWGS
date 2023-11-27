@@ -1,5 +1,6 @@
 import os
-SAMPLE = os.environ.get("SAMPLE")
+samples_dict = config["samples"]
+sample_ids = samples_dict.keys()
 CHROM_SIZES = config["CHROM_SIZE_PATH"]
 
 # get the events for the sample
@@ -16,10 +17,10 @@ CHROM_SIZES = config["CHROM_SIZE_PATH"]
 ### -------------------------------------------------------------------
 rule all:
 	input:
-            expand("output/{sample}/methylation/dmrHotspotIntersectHPV.bed", sample=SAMPLE),
-            expand("output/{sample}/methylation/dmrIntersectHPV.bed", sample=SAMPLE),
-            expand("output/{sample}/methylation/densityPlotDMRs.png", sample=SAMPLE),
-            expand("output/{sample}/methylation/dmrHotspotIntersectHPV-wa.bed", sample=SAMPLE)
+            expand("output/{sample}/methylation/dmrHotspotIntersectHPV.bed", sample=sample_ids),
+            expand("output/{sample}/methylation/dmrIntersectHPV.bed", sample=sample_ids),
+            expand("output/{sample}/methylation/densityPlotDMRs.png", sample=sample_ids),
+            expand("output/{sample}/methylation/dmrHotspotIntersectHPV-wa.bed", sample=sample_ids)
 
 ### -------------------------------------------------------------------
 ### DMR Hotspots
@@ -27,8 +28,8 @@ rule all:
 
 rule call_dmrs:
     input:
-        hp1="output/{sample}/methylation/HP1_MethylFrequency.tsv",
-        hp2="output/{sample}/methylation/HP2_MethylFrequency.tsv"
+        hp1=lambda w: config["samples"][w.sample]["HP1_methyl_freq"]
+        hp2=lambda w: config["samples"][w.sample]["HP2_methyl_freq"]
     output:
         "output/{sample}/methylation/diff_meth.csv"
     threads: 30

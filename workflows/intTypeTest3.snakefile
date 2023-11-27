@@ -1,5 +1,8 @@
 import os
-SAMPLE = os.environ.get("SAMPLE")
+
+samples_dict = config["samples"]
+sample_ids = samples_dict.keys()
+
 asmPath = "output/" + SAMPLE + "/asm/"
 EVENTS_ASM = [f for f in os.listdir(asmPath) if not f.startswith('.')]
 
@@ -22,7 +25,7 @@ REF = config["GENOME_MMI"]
 ### -------------------------------------------------------------------
 rule all:
 	input:
-		expand("output/{sample}/intType/{event}/intTest3.txt", sample=SAMPLE, event=eventsASM)
+		expand("output/{sample}/intType/{event}/intTest3.txt", sample=sample_ids, event=eventsASM)
 
 ### -------------------------------------------------------------------
 ### Make bed files

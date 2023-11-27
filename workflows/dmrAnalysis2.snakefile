@@ -1,6 +1,7 @@
 import os
 import pandas as pd
-SAMPLE = os.environ.get("SAMPLE")
+samples_dict = config["samples"]
+sample_ids = samples_dict.keys()
 
 # get the events for the sample
 eventsPath = "output/" + SAMPLE + "/events/hpv_integration_events_dist.txt"
@@ -12,7 +13,7 @@ EVENTS = list(summary.identifier)
 ### -------------------------------------------------------------------
 rule all:
 	input:
-            expand("output/{sample}/event_phase/{event}/hpv_phaseblock_hp.txt", sample=SAMPLE, event=EVENTS)
+            expand("output/{sample}/event_phase/{event}/hpv_phaseblock_hp.txt", sample=sample_ids, event=EVENTS)
 
 ### -------------------------------------------------------------------
 ### DMR Hotspots
@@ -39,7 +40,7 @@ rule subset_bed:
 
 rule get_phaseblocks:
     input:
-        vcf="output/{sample}/vcf/phased_merge_output.vcf.gz"
+        vcf=lambda w: config["samples"][w.sample]["phase_blocks"]
     output:
         "output/{sample}/event_phase/phase_blocks.txt"
     shell:
@@ -82,7 +83,7 @@ rule get_readnames:
 
 rule HP1_readnames:
     input:
-        bam="output/{sample}/bam/HP1_Converted2Bisulfite.sorted.bam",
+        bam=lambda w: config["samples"][w.sample]["HP1_bam"],
         txt="output/{sample}/event_phase/{event}/hpv_read_names.txt"
     output:
         "output/{sample}/event_phase/{event}/HP1_hpv_readnames.txt"
@@ -91,7 +92,7 @@ rule HP1_readnames:
 
 rule HP2_readnames:
     input:
-        bam="output/{sample}/bam/HP2_Converted2Bisulfite.sorted.bam",
+        bam=lambda w: config["samples"][w.sample]["HP2_bam"],
         txt="output/{sample}/event_phase/{event}/hpv_read_names.txt"
     output:
         "output/{sample}/event_phase/{event}/HP2_hpv_readnames.txt"
