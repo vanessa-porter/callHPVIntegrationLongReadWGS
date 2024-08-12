@@ -9,7 +9,7 @@ import concurrent.futures
 class inputFileError(ValueError):
     '''raise this when there's a mistake in an input file'''
 
-parser = argparse.ArgumentParser(description = "Converts a tab-separated file of sample information to a samples.yaml file")
+parser = argparse.ArgumentParser(description = "Calculates the GC content in sliding windows across an input genome")
 
 parser.add_argument("-f", "--fasta", help = "Path to fasta file")
 parser.add_argument("-w", "--window", help = "Window size to test (default = 1,000,000 bp)", default=1000000, type=int)

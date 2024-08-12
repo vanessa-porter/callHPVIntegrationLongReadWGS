@@ -16,7 +16,7 @@ import argparse
 class inputFileError(ValueError):
     '''raise this when there's a mistake in an input file'''
 
-parser = argparse.ArgumentParser(description = "Converts a tab-separated file of sample information to a samples.yaml file")
+parser = argparse.ArgumentParser(description = "Permutes a DMR window size and calculated the density fold change in 1000 random positions")
 
 parser.add_argument("-d", "--dmr_paths", help = "Path to test file with all the DMR files")
 parser.add_argument("-b", "--region", help = "Path to region bed file to be tested")

@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 class inputFileError(ValueError):
     '''raise this when there's a mistake in an input file'''
 
-parser = argparse.ArgumentParser(description = "Converts a tab-separated file of sample information to a samples.yaml file")
+parser = argparse.ArgumentParser(description = "Calculates the GC content in a window size around a bed file")
 
 parser.add_argument("-f", "--fasta", help = "Path to fasta file")
 parser.add_argument("-b", "--bed", help = "Path to bed file")

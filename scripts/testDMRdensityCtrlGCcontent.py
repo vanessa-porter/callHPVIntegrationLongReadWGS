@@ -13,7 +13,7 @@ from sklearn.utils import resample
 class inputFileError(ValueError):
     '''raise this when there's a mistake in an input file'''
 
-parser = argparse.ArgumentParser(description = "Converts a tab-separated file of sample information to a samples.yaml file")
+parser = argparse.ArgumentParser(description = "Caculates DMR density at control regions that mimic a specified GC content")
 
 parser.add_argument("-d", "--dmr_paths", help = "Path to file with all the DMR files")
 parser.add_argument("-v", "--hpv_paths", help = "Path to file with all the HPV distance event files")
