@@ -11,8 +11,6 @@ configfile: "config/parameters.yaml"
 rule all:
 	input:
 		expand("output/{sample}/bam/hpv_reads.bam.bai", sample=SAMPLE),
-		#expand("output/{sample}/bam/methyl_hpv_reads.bam.bai", sample=SAMPLES),
-		#expand("output/{sample}/methylation/hpv_methylation_frequency.tsv", sample=SAMPLES),
         expand("output/{sample}/methylation/hpv_reads_extract.tsv", sample=SAMPLE),
         expand("output/{sample}/methylation/hpv_reads_methylation.tsv", sample=SAMPLE),
         expand("output/{sample}/methylation/hpv_methylation_frequency.bed", sample=SAMPLE),
@@ -50,24 +48,6 @@ rule index_HPV_reads:
         "output/{sample}/bam/hpv_reads.bam.bai"
     shell:
         "samtools index {input.bam}"
-
-
-#rule filter_HPV_methyl_reads:
-#    input:
-#        names="output/{sample}/bam/hpv_read_names.txt",
-#        bam="output/{sample}/bam/methyl_reads.sorted.bam"
-#    output:
-#        "output/{sample}/bam/methyl_hpv_reads.bam"
-#    shell:
-#        "picard FilterSamReads -I {input.bam} -O {output} -READ_LIST_FILE {input.names} -FILTER includeReadList -VALIDATION_STRINGENCY SILENT"
-
-#rule index_HPV_methyl_reads:
-#    input:
-#        bam="output/{sample}/bam/methyl_hpv_reads.bam"
-#    output:
-#        "output/{sample}/bam/methyl_hpv_reads.bam.bai"
-#    shell:
-#        "samtools index {input.bam}"
 
 ### -------------------------------------------------------------------
 ### Make paf of the HPV reads
@@ -118,38 +98,17 @@ rule pileup_methyl_hpv:
         "modkit pileup {input.bam} {output} --log-filepath {log}"
 
 ### -------------------------------------------------------------------
-### Subset the methylation information to the HPV reads (old chemistry)
-### -------------------------------------------------------------------
-
-#rule methyl_hpv_reads:
-#    input:
-#        names="output/{sample}/bam/hpv_read_names.txt",
-#        tsv="output/{sample}/methylation/methylation.tsv"
-#    output:
-#        "output/{sample}/methylation/hpv_reads_methylation.tsv"
-#    shell:
-#        "grep -f {input.names} -F {input.tsv} > {output}"
-
-#rule methyl_freq_hpv:
-#    input:
-#        tsv="output/{sample}/methylation/methylation_frequency.tsv"
-#    output:
-#        "output/{sample}/methylation/hpv_methylation_frequency.tsv"
-#    shell:
-#        "grep HPV {input.tsv} > {output}"
-
-### -------------------------------------------------------------------
 ### Run the integration event caller on the Sniffles VCF
 ### -------------------------------------------------------------------
 
-#rule sniffles:
-#    input:
-#        bam=lambda w: config["samples"][w.sample]["bam"]
-#    output:
-#        "output/{sample}/vcf/sniffles_output.vcf"
-#    threads: 30
-#    shell:
-#        "sniffles --threads {threads} --max_distance 50 --max_num_splits -1 --report_BND --num_reads_report -1 --min_support 5 --min_seq_size 500 -m {input.bam} -v {output}"
+rule sniffles:
+    input:
+        bam=lambda w: config["samples"][w.sample]["bam"]
+    output:
+        "output/{sample}/vcf/sniffles_output.vcf"
+    threads: 30
+    shell:
+        "sniffles --threads {threads} --max_distance 50 --max_num_splits -1 --report_BND --num_reads_report -1 --min_support 5 --min_seq_size 500 -m {input.bam} -v {output}"
 
 checkpoint call_integration:
     input:

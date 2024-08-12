@@ -154,16 +154,6 @@ rule regionMeanDepth:
     shell:
         "bedtools map -a {input.bed} -b {input.depth} -c 4 -o mean > {output}"
 
-#rule regionCN:
-#    input:
-#        ploidy = "../ploidetect/illumina/Ploidetect-pipeline/ploidetect_out/{sample}/*/models.txt",
-#        cna = "../ploidetect/illumina/Ploidetect-pipeline/ploidetect_out/{sample}/*/cna_condensed.txt",
-#        depth = "output/{sample}/cn/{event}/regionsMeanDepth.bed"
-#    output: 
-#        "output/{sample}/cn/{event}/region_cna.txt"
-#    shell:
-#        "scripts/calculateCN.R -p {input.ploidy} -c {input.cna} -d {input.depth} -o {output}"
-
 rule merge:
     input:
         bed = "output/{sample}/cn/{event}/breakpoint_regions.bed"

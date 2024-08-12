@@ -1,5 +1,4 @@
 #!/gsc/software/linux-x86_64-centos7/R-4.0.2/bin/Rscript --vanilla
-.libPaths("/projects/vporter_prj/R/x86_64-centos7-linux-gnu-library/4.0")
 
 #Note: these packages need to be installed.
 suppressMessages(library(optparse))
@@ -28,10 +27,7 @@ opt = parse_args(opt_parser)
 ### ----------------------------------------------------------------
 
 # HPV reads methylation file
-#me <- read.delim("/projects/hpv_nanopore_prj/htmcp/call_integration/output/HTMCP-03-06-02219/methylation/hpv_reads_methylation.tsv", comment.char = '#', header = T, sep = "\t", stringsAsFactors = F)
 me <- read.delim(opt$methyl, comment.char = '#', header = T, sep = "\t", stringsAsFactors = F)
-
-#dir <- "/projects/hpv_nanopore_prj/htmcp/call_integration/output/HTMCP-03-06-02219/events"
 dir <- opt$dir
 
 # event reads
@@ -78,4 +74,3 @@ freq <- freq[freq$total.calls > 2,]
 freq <- freq[,c(2,3,1,4:7)] %>% arrange(event, chrom, ref_position)
 colnames(freq)[c(1,2)] <- c("chromosome", "start")
 write.table(freq, file = opt$out, quote = F, col.names = T, row.names = F, sep = "\t")
-#write.table(freq, file = "/projects/hpv_nanopore_prj/htmcp/call_integration/F46073/methylation/event_methyl_freq.tsv", quote = F, col.names = T, row.names = F, sep = "\t")

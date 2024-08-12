@@ -1,5 +1,4 @@
 #!/gsc/software/linux-x86_64-centos7/R-4.0.2/bin/Rscript --vanilla
-.libPaths("/projects/vporter_prj/R/x86_64-centos7-linux-gnu-library/4.0")
 
 ### ----------------------------------------------------------
 ### OptParse Options
@@ -27,12 +26,6 @@ suppressMessages(library(tidyr))
 ### Read in Files
 ### ----------------------------------------------------------
 
-# practice files
-#dmr <- read.delim("/projects/hpv_nanopore_prj2/htmcp/lims_fnn/rerun/HTMCP_125_F127658/differential_methylation/F127658_Results_callDMR.txt.gz", header = T)
-#out <- "/projects/hpv_nanopore_prj/htmcp/call_integration/output/HTMCP-03-06-02002-test/methylation"
-#hpv <- read.delim("/projects/hpv_nanopore_prj/htmcp/call_integration/output/HTMCP-03-06-02002-test/events/hpv_integration_events_distance.bed", header = F)
-#pr <- read.delim("/projects/hpv_nanopore_prj/htmcp/call_integration/output/HTMCP-03-06-02063/event_phase/phased_regions.bed", header = F)
-
 # get the inputs
 dmr <- read.delim(opt$dmr, header = T)
 out <- opt$out
@@ -42,7 +35,7 @@ hpv <- read.delim(opt$hpv, header = F)
 dmr <- dmr %>% filter(chr %in% c(paste0("chr", 1:22), "chrX"))
 
 # chromosome lengths
-cl <- read.delim("/projects/hpv_nanopore_prj/refs/hg38_chromSizes.txt", header = F)
+cl <- read.delim("tables/hg38_chromSizes.txt", header = F)
 sl <- cl$V2
 names(sl) <- cl$V1
 

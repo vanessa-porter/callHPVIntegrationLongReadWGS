@@ -8,13 +8,6 @@ depthpath = os.environ.get("DEPTH")
 asmpath = os.environ.get("ASM")
 
 # read in files
-
-#subpath = "output/HTMCP-03-06-02182/intType/event1/reads_sub_asm.bed"
-#infopath = "output/HTMCP-03-06-02182/asm/event1/assembly_info.txt"
-#depthpath = "output/HTMCP-03-06-02182/intType/event1/reads_cov_asm.bed"
-#asmpath = "output/HTMCP-03-06-02182/intType/event1/assembly.hybrid.filt.bed"
-
-
 sub = pd.read_csv(subpath, sep='\t', lineterminator='\n', names = ["chr", "start", "end", "read", "MAPQ", "strand"])
 depth = pd.read_csv(depthpath, sep='\t', lineterminator='\n', names = ["chr", "position", "depth"])
 asm = pd.read_csv(asmpath, sep='\t', lineterminator='\n', names = ["chr", "start", "end", "read", "MAPQ", "strand"])

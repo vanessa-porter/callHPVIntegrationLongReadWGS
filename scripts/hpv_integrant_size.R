@@ -15,12 +15,8 @@ suppressMessages(library(ggsci))
 
 
 ### -------------------------------------------------------------------------------
-### READ IN FILES - best example = HTMCP-03-06-02238
+### READ IN FILES 
 ### -------------------------------------------------------------------------------
-
-#pafr <- read_paf("/projects/hpv_nanopore_prj/htmcp/call_integration/output/HTMCP-03-06-02097/bam/hpv_reads.paf")
-#sum <- read.delim("/projects/hpv_nanopore_prj/htmcp/call_integration/output/HTMCP-03-06-02097/events/summary.txt", header = T)
-#out <- "/projects/hpv_nanopore_prj/htmcp/call_integration/output/HTMCP-03-06-02097/hpv_size/"
 
 hpv <- read.delim("/projects/hpv_nanopore_prj/refs/HPV_all_chromsizes.txt", header = F)
 
@@ -42,7 +38,7 @@ pafr <- read_paf(opt$paf)
 sum <- read.delim(opt$sum, header = T)
 
 ### -------------------------------------------------------------------------------
-### READ IN FILES - best example = HTMCP-03-06-02238
+### READ IN FILES 
 ### -------------------------------------------------------------------------------
 
 # ggplot directly

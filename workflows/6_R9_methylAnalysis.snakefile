@@ -19,15 +19,15 @@ configfile: "config/parameters.yaml"
 ### -------------------------------------------------------------------
 rule all:
 	input:
-            #expand("output/{sample}/methylation/dmrHotspotIntersectHPV.bed", sample=SAMPLE),
-            #expand("output/{sample}/methylation/diff_meth.csv", sample=SAMPLE),
-            #expand("output/{sample}/methylation/densityPlotDMRs.png", sample=SAMPLE),
-            #expand("output/{sample}/methylation/dmrHotspotIntersectHPV-wa.bed", sample=SAMPLE),
-            #expand("output/{sample}/events/hpv_integration_events_dist.txt", sample=SAMPLE),
-            #expand("output/{sample}/methylation/dmr.sorted.bed", sample=SAMPLE),
+            expand("output/{sample}/methylation/dmrHotspotIntersectHPV.bed", sample=SAMPLE),
+            expand("output/{sample}/methylation/diff_meth.csv", sample=SAMPLE),
+            expand("output/{sample}/methylation/densityPlotDMRs.png", sample=SAMPLE),
+            expand("output/{sample}/methylation/dmrHotspotIntersectHPV-wa.bed", sample=SAMPLE),
+            expand("output/{sample}/events/hpv_integration_events_dist.txt", sample=SAMPLE),
+            expand("output/{sample}/methylation/dmr.sorted.bed", sample=SAMPLE),
             expand("output/{sample}/methylation/cpg_island_methyl_average.txt",sample=SAMPLE)
-            #expand("output/{sample}/.combined/dist_combined2.txt",sample=SAMPLE),
-            #expand("output/{sample}/methylation/dmrIntersectHPV.bed", sample=SAMPLE)
+            expand("output/{sample}/.combined/dist_combined2.txt",sample=SAMPLE),
+            expand("output/{sample}/methylation/dmrIntersectHPV.bed", sample=SAMPLE)
 
 ### -------------------------------------------------------------------
 ### DMR Hotspots

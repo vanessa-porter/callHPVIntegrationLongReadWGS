@@ -20,7 +20,6 @@ rule all:
             expand("output/{sample}/event_phase/{event}/dmr_dist_hpv.bed", sample=SAMPLE, event=EVENTS),
             expand("output/{sample}/event_phase/{event}/dmr_permute_500kbup/plottingDensityValues.txt", sample=SAMPLE, event=EVENTS),
             expand("output/{sample}/event_phase/{event}/dmr_permute_500kbdown/plottingDensityValues.txt", sample=SAMPLE, event=EVENTS)
-            #expand("output/{sample}/event_phase/{event}/dmr_permute_1Mb/plottingDensityValues.txt", sample=SAMPLE, event=EVENTS)
 
 ### -------------------------------------------------------------------
 ### DMR Hotspots

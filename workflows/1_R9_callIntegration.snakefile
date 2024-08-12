@@ -11,8 +11,7 @@ configfile: "config/parameters.yaml"
 rule all:
 	input:
 		expand("output/{sample}/bam/hpv_reads.bam.bai", sample=SAMPLE),
-		#expand("output/{sample}/bam/methyl_hpv_reads.bam.bai", sample=SAMPLES),
-		#expand("output/{sample}/methylation/hpv_methylation_frequency.tsv", sample=SAMPLES),
+		expand("output/{sample}/bam/methyl_hpv_reads.bam.bai", sample=SAMPLES),
         expand("output/{sample}/methylation/hpv_reads_extract.tsv", sample=SAMPLE),
         expand("output/{sample}/methylation/hpv_reads_methylation.tsv", sample=SAMPLE),
         expand("output/{sample}/methylation/hpv_methylation_frequency.bed", sample=SAMPLE),
@@ -52,22 +51,22 @@ rule index_HPV_reads:
         "samtools index {input.bam}"
 
 
-#rule filter_HPV_methyl_reads:
-#    input:
-#        names="output/{sample}/bam/hpv_read_names.txt",
-#        bam="output/{sample}/bam/methyl_reads.sorted.bam"
-#    output:
-#        "output/{sample}/bam/methyl_hpv_reads.bam"
-#    shell:
-#        "picard FilterSamReads -I {input.bam} -O {output} -READ_LIST_FILE {input.names} -FILTER includeReadList -VALIDATION_STRINGENCY SILENT"
+rule filter_HPV_methyl_reads:
+    input:
+        names="output/{sample}/bam/hpv_read_names.txt",
+        bam="output/{sample}/bam/methyl_reads.sorted.bam"
+    output:
+        "output/{sample}/bam/methyl_hpv_reads.bam"
+    shell:
+        "picard FilterSamReads -I {input.bam} -O {output} -READ_LIST_FILE {input.names} -FILTER includeReadList -VALIDATION_STRINGENCY SILENT"
 
-#rule index_HPV_methyl_reads:
-#    input:
-#        bam="output/{sample}/bam/methyl_hpv_reads.bam"
-#    output:
-#        "output/{sample}/bam/methyl_hpv_reads.bam.bai"
-#    shell:
-#        "samtools index {input.bam}"
+rule index_HPV_methyl_reads:
+    input:
+        bam="output/{sample}/bam/methyl_hpv_reads.bam"
+    output:
+        "output/{sample}/bam/methyl_hpv_reads.bam.bai"
+    shell:
+        "samtools index {input.bam}"
 
 ### -------------------------------------------------------------------
 ### Make paf of the HPV reads
@@ -90,53 +89,27 @@ rule HPV_paf_reads:
     shell:
         "minimap2 -cx map-ont /projects/alignment_references/9606/hg38_no_alt_TCGA_HTMCP_HPVs/genome/minimap2-2.15-map-ont/hg38_no_alt_TCGA_HTMCP_HPVs_map-ont.mmi {input.fasta} > {output}"
 
-### -------------------------------------------------------------------
-### extract methylation from reads (new chemistry)
-### -------------------------------------------------------------------
-
-rule extract_methyl:
-    input:
-        bai="output/{sample}/bam/hpv_reads.bam.bai",
-        bam="output/{sample}/bam/hpv_reads.bam"
-    output:
-        extract="output/{sample}/methylation/hpv_reads_extract.tsv",
-        methyl="output/{sample}/methylation/hpv_reads_methylation.tsv"
-    threads: 20
-    log: "output/{sample}/log/extract_methyl.log"
-    shell:
-        "modkit extract --threads {threads} --allow-non-primary {input.bam} {output.extract} --read-calls-path {output.methyl} --log-filepath {log}"
-
-rule pileup_methyl_hpv:
-    input:
-        bai="output/{sample}/bam/hpv_reads.bam.bai",
-        bam="output/{sample}/bam/hpv_reads.bam"
-    output:
-        "output/{sample}/methylation/hpv_methylation_frequency.bed"
-    threads: 20
-    log: "output/{sample}/log/pileup_methyl_hpv.log"
-    shell:
-        "modkit pileup {input.bam} {output} --log-filepath {log}"
 
 ### -------------------------------------------------------------------
 ### Subset the methylation information to the HPV reads (old chemistry)
 ### -------------------------------------------------------------------
 
-#rule methyl_hpv_reads:
-#    input:
-#        names="output/{sample}/bam/hpv_read_names.txt",
-#        tsv="output/{sample}/methylation/methylation.tsv"
-#    output:
-#        "output/{sample}/methylation/hpv_reads_methylation.tsv"
-#    shell:
-#        "grep -f {input.names} -F {input.tsv} > {output}"
+rule methyl_hpv_reads:
+    input:
+        names="output/{sample}/bam/hpv_read_names.txt",
+        tsv="output/{sample}/methylation/methylation.tsv"
+    output:
+        "output/{sample}/methylation/hpv_reads_methylation.tsv"
+    shell:
+        "grep -f {input.names} -F {input.tsv} > {output}"
 
-#rule methyl_freq_hpv:
-#    input:
-#        tsv="output/{sample}/methylation/methylation_frequency.tsv"
-#    output:
-#        "output/{sample}/methylation/hpv_methylation_frequency.tsv"
-#    shell:
-#        "grep HPV {input.tsv} > {output}"
+rule methyl_freq_hpv:
+    input:
+        tsv="output/{sample}/methylation/methylation_frequency.tsv"
+    output:
+        "output/{sample}/methylation/hpv_methylation_frequency.tsv"
+    shell:
+        "grep HPV {input.tsv} > {output}"
 
 ### -------------------------------------------------------------------
 ### Run the integration event caller on the Sniffles VCF
@@ -304,31 +277,6 @@ rule asm_sniffles:
     threads: 5
     shell:
         "sniffles --threads {threads} --max_distance 50 --max_num_splits -1 --report_BND --num_reads_report -1 --min_support 3 --min_seq_size 500 -m {input.bam} -v {output}"
-
-### -------------------------------------------------------------------
-### RepeatMaster
-### -------------------------------------------------------------------
-
-#rule repeat_master:
-#    input:
-#        fasta="output/{sample}/events/event{i}.fasta"
-#    output:
-#        "output/{sample}/intType/event{i}/.scratch/reads.fasta.out.gff"
-#    threads: 20
-#    shell:
-#        "singularity exec -B /projects,/home /projects/vporter_prj/tools/repeatmasker_4.1.2.p1--pl5321hdfd78af_1.sif RepeatMasker {input.fasta} -pa {threads} -gff -species human"
-
-### -------------------------------------------------------------------
-### get regions before and after integration sites
-### -------------------------------------------------------------------
-
-#rule split_summary:
-#    input:
-#        summary = "output/{sample}/events/summary.txt"
-#    output:
-#        "output/{sample}/intTypeTest/event{i}/.scratch/event_summary.txt"
-#    shell:
-#        "grep {wildcards.event} {input.summary} > {output}"
 
 
 ### -------------------------------------------------------------------
