@@ -37,11 +37,11 @@ genome_path: /path/to/genome/fasta
 ```
 
 #### **Example samples.yaml:** <br />
-Main config file to specify input files.
+Main config file to specify input files. Use other headers for R9 flow cell samples. 
 
 ```
 samples:
-    sample_name
+    sample_name:
         bam: /path/to/bam/file
         dmr: /path/to/dmr/file
         phase: /path/to/vcf/file
