@@ -58,13 +58,13 @@ scripts/samplestoyaml.py -t samples.txt -o config/samples.yaml
 Each section of the workflow has to be run in succession, according to the listed number on the workflow. The correct version should be used for steps that have different workflows for R9 and R10 flow cells. Samples must be ran one at a time, with each named in the command to pull the paths from the config file.  
 
 ```
-SAMPLE=sample_name snakemake -s 1_R10_callIntegration.snakefile -c 30 --use-conda
-SAMPLE=sample_name snakemake -s 2_intTypeTest.snakefile -c 30 --use-conda
-SAMPLE=sample_name snakemake -s 3_intTypeTest.snakefile -c 30 --use-conda
-SAMPLE=sample_name snakemake -s 4_intTypeTest.snakefile -c 30 --use-conda
-SAMPLE=sample_name snakemake -s 5_intTypeTest.snakefile -c 30 --use-conda
-SAMPLE=sample_name snakemake -s 6_R10_methylAnalysis.snakefile -c 30 --use-conda
-SAMPLE=sample_name snakemake -s 7_R10_methylAnalysis.snakefile -c 30 --use-conda
+SAMPLE=sample_name snakemake -s workflow/1_R10_callIntegration.snakefile -c 30 --use-conda
+SAMPLE=sample_name snakemake -s workflow/2_intTypeTest.snakefile -c 30 --use-conda
+SAMPLE=sample_name snakemake -s workflow/3_intTypeTest.snakefile -c 30 --use-conda
+SAMPLE=sample_name snakemake -s workflow/4_intTypeTest.snakefile -c 30 --use-conda
+SAMPLE=sample_name snakemake -s workflow/5_intTypeTest.snakefile -c 30 --use-conda
+SAMPLE=sample_name snakemake -s workflow/6_R10_methylAnalysis.snakefile -c 30 --use-conda
+SAMPLE=sample_name snakemake -s workflow/7_R10_methylAnalysis.snakefile -c 30 --use-conda
 ```
 
 # Contributors
