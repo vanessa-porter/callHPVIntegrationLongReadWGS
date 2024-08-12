@@ -1,8 +1,6 @@
 import os
 import pandas as pd
-
-samples_dict = config["samples"]
-sample_ids = samples_dict.keys()
+SAMPLE = os.environ.get("SAMPLE")
 
 # get the events for the sample
 eventsPath = "output/" + SAMPLE + "/events/summary.txt"
@@ -18,7 +16,7 @@ if (none > 0):
 ### -------------------------------------------------------------------
 rule all:
 	input:
-		expand("output/{sample}/intType/{event}/integration_type.txt", sample=sample_ids, event=EVENTS)
+		expand("output/{sample}/intType/{event}/integration_type.txt", sample=SAMPLE, event=EVENTS)
 
 ### -------------------------------------------------------------------
 ### Rule

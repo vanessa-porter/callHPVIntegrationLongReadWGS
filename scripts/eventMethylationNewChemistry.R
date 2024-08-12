@@ -28,16 +28,16 @@ opt = parse_args(opt_parser)
 ### ----------------------------------------------------------------
 
 # HPV reads methylation file
-#me <- read.delim("/projects/hpv_nanopore_prj/htmcp/call_integration/F46073/methylation/hpv_reads_methylation.tsv", comment.char = '#', header = F, sep = "\t", stringsAsFactors = F)
-me <- read.delim(opt$methyl, comment.char = '#', header = F, sep = "\t", stringsAsFactors = F)
+#me <- read.delim("/projects/hpv_nanopore_prj/htmcp/call_integration/output/HTMCP-03-06-02219/methylation/hpv_reads_methylation.tsv", comment.char = '#', header = T, sep = "\t", stringsAsFactors = F)
+me <- read.delim(opt$methyl, comment.char = '#', header = T, sep = "\t", stringsAsFactors = F)
 
-#dir <- "/projects/hpv_nanopore_prj/htmcp/call_integration/F46073/events"
+#dir <- "/projects/hpv_nanopore_prj/htmcp/call_integration/output/HTMCP-03-06-02219/events"
 dir <- opt$dir
 
 # event reads
 files <- grep("event", list.files(dir, recursive = T, full.names = F),value = T)
 files <- files[grep(".txt", files)]
-files <- files[!grepl("depth", files)]
+files <- files[!grepl("dist", files)]
 files <- grep(paste(files,collapse="|"), list.files(dir, recursive = T, full.names = T),value = T)
 names <- gsub(paste0(dir, "/"), "", files)
 names <- gsub(".txt", "", names)
@@ -54,15 +54,13 @@ colnames(reads)[2] <- "read.name"
 ### Separate methylation frequencies by event
 ### ----------------------------------------------------------------
 
-colnames(me) <- c("chromosome","strand","start","end","read_name","log_lik_ratio",
-                  "log_lik_methylated","log_lik_unmethylated","num_calling_strands","num_motifs","sequence")
-
-me$event <- reads$event[match(me$read_name, reads$read.name)]
+me$event <- reads$event[match(me$read_id, reads$read.name)]
 me <- me[complete.cases(me),]
-me$methylation.call <- ifelse(me$log_lik_ratio > 0, "methylated", "unmethylated")
+me <- me[me$ref_position > 0,]
+me$methylation.call <- ifelse(me$call_code == "m", "methylated", "unmethylated")
 
 freq <- me %>%
-  group_by(event, chromosome, start, methylation.call) %>%
+  group_by(event, chrom, ref_position, methylation.call) %>%
   summarise(n.calls = n()) %>%
   ungroup() %>%
   spread(methylation.call,  n.calls) %>%
@@ -71,12 +69,13 @@ freq <- me %>%
 
 freq$total.calls <- freq$methylated + freq$unmethylated
 freq$perc.methylated <- freq$methylated / freq$total.calls
-freq <- freq[freq$total.calls > 4,]
+freq <- freq[freq$total.calls > 2,]
 
 ### ----------------------------------------------------------------
 ### Save
 ### ----------------------------------------------------------------
 
-freq <- freq[,c(2,3,1,4:7)] %>% arrange(event, chromosome, start)
+freq <- freq[,c(2,3,1,4:7)] %>% arrange(event, chrom, ref_position)
+colnames(freq)[c(1,2)] <- c("chromosome", "start")
 write.table(freq, file = opt$out, quote = F, col.names = T, row.names = F, sep = "\t")
 #write.table(freq, file = "/projects/hpv_nanopore_prj/htmcp/call_integration/F46073/methylation/event_methyl_freq.tsv", quote = F, col.names = T, row.names = F, sep = "\t")

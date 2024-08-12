@@ -1,8 +1,6 @@
 import os
 import pandas as pd
-
-samples_dict = config["samples"]
-sample_ids = samples_dict.keys()
+SAMPLE = os.environ.get("SAMPLE")
 
 # get the events for the sample
 intPath = "output/" + SAMPLE + "/intType/"
@@ -12,7 +10,7 @@ events = [f for f in os.listdir(intPath) if not f.startswith('.')]
 eventsPath = [intPath + s for s in events]
 
 # genes
-gene_gff = config["GENES_PATH"]
+gene_gff = "/gsc/resources/annotation/snpeff/snpeff_binaries/5.0/data/GRCh38.100/genes.gtf"
 
 # two-break events
 tbe = []
@@ -28,9 +26,9 @@ for d in eventsPath:
 ### -------------------------------------------------------------------
 rule all:
 	input:
-		expand("output/{sample}/intType/{event}/intTest2.txt", sample=sample_ids, event=tbe),
-        expand("output/{sample}/intType/{event}/genic_test/event_location.txt" , sample=sample_ids, event=tbe),
-        expand("output/{sample}/methylation/regions/{event}/methylregions.bed", sample=sample_ids, event=tbe)
+		expand("output/{sample}/intType/{event}/intTest2.txt", sample=SAMPLE, event=tbe),
+        expand("output/{sample}/intType/{event}/genic_test/event_location.txt" , sample=SAMPLE, event=tbe),
+        expand("output/{sample}/methylation/regions/{event}/methylregions.bed", sample=SAMPLE, event=tbe)
 
 ### -------------------------------------------------------------------
 ### get depth of regions before and after integration sites

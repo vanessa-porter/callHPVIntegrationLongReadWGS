@@ -1,4 +1,5 @@
 #!/gsc/software/linux-x86_64-centos7/R-4.0.2/bin/Rscript --vanilla
+.libPaths("/projects/vporter_prj/R/x86_64-centos7-linux-gnu-library/4.0")
 
 #Note: these packages need to be installed.
 suppressMessages(library(optparse))
@@ -36,20 +37,27 @@ de <- d %>%
 
 fc_mat <- data.frame(region = unique(de$region)) 
 fc_mat$log2FC <- NA
+fc_mat$zscore <- NA
 
 for (region in unique(de$region)) {
   sub <- de[de$region == region,]
   samp <- sub$dmr.density[sub$sample == "hpv_sample"]
   mean <- mean(sub$dmr.density[sub$sample == "other"])
   fc <- log2(samp / mean)
+  z <- (samp-mean(sub$dmr.density))/sd(sub$dmr.density)
   fc_mat[fc_mat$region == region, "log2FC"] <- fc
+  fc_mat[fc_mat$region == region, "zscore"] <- z
 }
 
 fc <- fc_mat$log2FC[fc_mat$region == "hpv_region"]
 num_higher <- nrow(subset(fc_mat, log2FC > fc))
 p <- ifelse(num_higher == 0, 0.001, num_higher / 1000)
 
-pval <- data.frame(sample = sample, event = event, log2FC = fc, pval = p)
+zs <- fc_mat$zscore[fc_mat$region == "hpv_region"]
+num_higher_z <- nrow(subset(fc_mat, zscore > zs))
+p2 <- ifelse(num_higher_z == 0, 0.001, num_higher_z / 1000)
+
+pval <- data.frame(sample = sample, event = event, log2FC = fc, pval = p, pval_zscore = p2)
 
 write.table(pval, paste0(opt$out, "/pvalue.txt"), quote = F, col.names = T, sep = "\t", row.names = F)
 

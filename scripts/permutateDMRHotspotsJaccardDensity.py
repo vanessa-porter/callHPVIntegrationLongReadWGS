@@ -40,6 +40,43 @@ allDmrF = [item for sublist in allDMRFiles for item in sublist] # flatten list
 ctrlDMRFiles = list(filter(lambda x:parser.sample not in x, allDmrF))
 testDMRFile = list(filter(lambda x:parser.sample in x, allDmrF))
 
+# Get all the pairwise combinations of the test vs the controls
+testPairs = [s + "," + testDMRFile[0] for s in ctrlDMRFiles]
+
+# Get all the pairwise combinations of the controls
+ctrlP = [",".join(map(str, comb)) for comb in list(combinations(ctrlDMRFiles, 2))]
+ctrlPairs = random.sample(ctrlP, len(testPairs)) # pick the same number of combinations as the test 
+
+##### ---------------------------------------------------------------------
+##### GET THE JACCARD FOR THE HPV HOTSPOT IN TEST AND CONTROL PAIRS
+##### ---------------------------------------------------------------------
+
+## TEST PAIRS
+testJ = []
+for p in testPairs:
+    pairs = p.split(",")
+    pairsBT = [BedTool(i) for i in pairs]
+    shDMRs = [i.intersect(hs, wa=True) for i in pairsBT]
+    smpl1 = shDMRs[0]
+    smpl2 = shDMRs[1]
+    j = smpl1.jaccard(smpl2)
+    jaccard = j.get('jaccard')
+    testJ.append(jaccard)
+
+## OTHER PAIRS
+ctrlJ = []
+for p in ctrlPairs:
+    pairs = p.split(",")
+    pairsBT = [BedTool(i) for i in pairs]
+    shDMRs = [i.intersect(hs, wa=True) for i in pairsBT]
+    smpl1 = shDMRs[0]
+    smpl2 = shDMRs[1]
+    j = smpl1.jaccard(smpl2)
+    jaccard = j.get('jaccard')
+    ctrlJ.append(jaccard)
+
+j = {'test': testJ, 'controls': ctrlJ, 'region': 'hpv_region'}
+
 ##### ---------------------------------------------------------------------
 ##### GET THE DMR DENSITY IN THE HPV HOTSPOT IN TEST AND CONTROLS
 ##### ---------------------------------------------------------------------
@@ -71,10 +108,37 @@ d = {'test': dT, 'controls': dC, 'region': 'hpv_region'}
 ##### GET JACCARD AND DENSITY VALUES FOR 1000 SHUFFLED POSITIONS
 ##### --------------------------------------------------------------------
 
-def process_iteration(i, genome, testDMRFile, ctrlDMRFiles, size):
+def process_iteration(i, genome, testPairs, ctrlPairs, testDMRFile, ctrlDMRFiles, size):
     print(i)
     sh = hs.shuffle(g = genome)  # get the shuffled position
     region = 'region' + str(i + 1)
+    
+    # GET THE JACCARD IN THE SHUFFLED REGION FOR EACH TEST PAIR
+    testJ = []
+    for p in testPairs:
+        pairs = p.split(",")
+        pairsBT = [BedTool(i) for i in pairs]
+        shDMRs = [i.intersect(sh, wa=True) for i in pairsBT]
+        smpl1 = shDMRs[0]
+        smpl2 = shDMRs[1]
+        j = smpl1.jaccard(smpl2)
+        jaccard = j.get('jaccard')
+        testJ.append(jaccard)
+    
+    # GET THE JACCARD IN THE SHUFFLED REGION FOR EACH CONTROL PAIR
+    ctrlJ = []
+    for p in ctrlPairs:
+        pairs = p.split(",")
+        pairsBT = [BedTool(i) for i in pairs]
+        shDMRs = [i.intersect(sh, wa=True) for i in pairsBT]
+        smpl1 = shDMRs[0]
+        smpl2 = shDMRs[1]
+        j = smpl1.jaccard(smpl2)
+        jaccard = j.get('jaccard')
+        ctrlJ.append(jaccard)
+    
+    # save the jaccard indices
+    j = {'test': testJ, 'controls': ctrlJ, 'region': region}
     
     # GET THE DENSITY OF THE TEST SAMPLE AT THE SHUFFLED POSITION
     b = BedTool(testDMRFile[0])
@@ -96,9 +160,10 @@ def process_iteration(i, genome, testDMRFile, ctrlDMRFiles, size):
     # save the densities
     d = {'test': dT, 'controls': dC, 'region': region}
     
-    return d
+    return j, d
 
 # Initialize results lists and append initial results
+allShuffleJ = [j]
 allShuffleD = [d]
 
 # Number of threads
@@ -108,15 +173,19 @@ num_threads = int(parser.threads)  # Set this to the desired number of threads
 with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
     futures = []
     for i in range(1000):
-        futures.append(executor.submit(process_iteration, i, genome, testDMRFile, ctrlDMRFiles, size))
+        futures.append(executor.submit(process_iteration, i, genome, testPairs, ctrlPairs, testDMRFile, ctrlDMRFiles, size))
     
     for future in concurrent.futures.as_completed(futures):
-        d = future.result()
+        j, d = future.result()
+        allShuffleJ.append(j)
         allShuffleD.append(d)
 
 # CONVERT TO PANDAS DATAFRAME
+dfJ = pd.concat(pd.DataFrame(i) for i in allShuffleJ)
 dfD = pd.concat(pd.DataFrame(i) for i in allShuffleD)
 
 # save the dataframes
 out1 = parser.out + '/densityPermuteTest.txt'
+out2 = parser.out + '/jaccardPermuteTest.txt'
 dfD.to_csv(path_or_buf = out1, sep = "\t", header = True, index = False)
+dfJ.to_csv(path_or_buf = out2, sep = "\t", header = True, index = False)

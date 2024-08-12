@@ -1,24 +1,26 @@
 import os
-# samples
-samples_dict = config["samples"]
-sample_ids = samples_dict.keys()
+SAMPLE = os.environ.get("SAMPLE")
 
-GENOME_REF = config["GENOME_MMI"]
+## Load config values
+configfile: "config/samples.yaml"
+configfile: "config/parameters.yaml"
 
 ### -------------------------------------------------------------------
 ### Target rule
 ### -------------------------------------------------------------------
 rule all:
 	input:
-		expand("output/{sample}/bam/hpv_reads.bam.bai", sample=sample_ids),
-		expand("output/{sample}/bam/methyl_hpv_reads.bam.bai", sample=sample_ids),
-		expand("output/{sample}/methylation/hpv_methylation_frequency.tsv", sample=sample_ids),
-        expand("output/{sample}/methylation/event_methyl_freq.tsv", sample=sample_ids),
-        expand("output/{sample}/.combined/events_combined1.txt", sample=sample_ids),
-		expand("output/{sample}/.combined/events_combined2.txt", sample=sample_ids),
-		expand("output/{sample}/.combined/events_combined3.txt", sample=sample_ids),
-        expand("output/{sample}/.combined/events_combined4.txt", sample=sample_ids),
-        expand("output/{sample}/.combined/events_combined5.txt", sample=sample_ids)
+		expand("output/{sample}/bam/hpv_reads.bam.bai", sample=SAMPLE),
+		#expand("output/{sample}/bam/methyl_hpv_reads.bam.bai", sample=SAMPLES),
+		#expand("output/{sample}/methylation/hpv_methylation_frequency.tsv", sample=SAMPLES),
+        expand("output/{sample}/methylation/hpv_reads_extract.tsv", sample=SAMPLE),
+        expand("output/{sample}/methylation/hpv_reads_methylation.tsv", sample=SAMPLE),
+        expand("output/{sample}/methylation/hpv_methylation_frequency.bed", sample=SAMPLE),
+        expand("output/{sample}/.combined/events_combined1.txt", sample=SAMPLE),
+		expand("output/{sample}/.combined/events_combined2.txt", sample=SAMPLE),
+		expand("output/{sample}/.combined/events_combined3.txt", sample=SAMPLE),
+        expand("output/{sample}/.combined/events_combined4.txt", sample=SAMPLE),
+        expand("output/{sample}/.combined/events_combined5.txt", sample=SAMPLE)
 
 ### -------------------------------------------------------------------
 ### Creating the HPV-only bam files
@@ -26,16 +28,16 @@ rule all:
 
 rule select_HPV_reads:
     input:
-        bam=lambda w: config["samples"][w.sample]["bam"]
+        bam = lambda w: config["samples"][w.sample]["bam"]
     output:
         "output/{sample}/bam/hpv_read_names.txt"
     shell:
-        "samtools view {input.bam} HPV16 HPV18 HPV45 HPV52 HPV82 HPV58 HPV31 HPV73 HPV68 HPV33 | cut -f1 | sort | uniq - > {output}"
+        "samtools view {input.bam} HPV16 HPV18 HPV26 HPV30 HPV31 HPV33 HPV35 HPV45 HPV51 HPV52 HPV58 HPV59 HPV68 HPV69 HPV73 HPV82 | cut -f1 | sort | uniq - > {output}"
 
 rule filter_HPV_reads:
     input:
         names="output/{sample}/bam/hpv_read_names.txt",
-        bam="output/{sample}/bam/all_reads.sorted.bam"
+        bam=lambda w: config["samples"][w.sample]["bam"]
     output:
         "output/{sample}/bam/hpv_reads.bam"
     shell:
@@ -49,22 +51,23 @@ rule index_HPV_reads:
     shell:
         "samtools index {input.bam}"
 
-rule filter_HPV_methyl_reads:
-    input:
-        names="output/{sample}/bam/hpv_read_names.txt",
-        bam=lambda w: config["samples"][w.sample]["methyl_bam"]
-    output:
-        "output/{sample}/bam/methyl_hpv_reads.bam"
-    shell:
-        "picard FilterSamReads -I {input.bam} -O {output} -READ_LIST_FILE {input.names} -FILTER includeReadList -VALIDATION_STRINGENCY SILENT"
 
-rule index_HPV_methyl_reads:
-    input:
-        bam="output/{sample}/bam/methyl_hpv_reads.bam"
-    output:
-        "output/{sample}/bam/methyl_hpv_reads.bam.bai"
-    shell:
-        "samtools index {input.bam}"
+#rule filter_HPV_methyl_reads:
+#    input:
+#        names="output/{sample}/bam/hpv_read_names.txt",
+#        bam="output/{sample}/bam/methyl_reads.sorted.bam"
+#    output:
+#        "output/{sample}/bam/methyl_hpv_reads.bam"
+#    shell:
+#        "picard FilterSamReads -I {input.bam} -O {output} -READ_LIST_FILE {input.names} -FILTER includeReadList -VALIDATION_STRINGENCY SILENT"
+
+#rule index_HPV_methyl_reads:
+#    input:
+#        bam="output/{sample}/bam/methyl_hpv_reads.bam"
+#    output:
+#        "output/{sample}/bam/methyl_hpv_reads.bam.bai"
+#    shell:
+#        "samtools index {input.bam}"
 
 ### -------------------------------------------------------------------
 ### Make paf of the HPV reads
@@ -72,6 +75,7 @@ rule index_HPV_methyl_reads:
 
 rule HPV_fasta:
     input:
+        bai="output/{sample}/bam/hpv_reads.bam.bai",
         bam="output/{sample}/bam/hpv_reads.bam"
     output:
         "output/{sample}/bam/hpv_reads.fasta"
@@ -84,28 +88,55 @@ rule HPV_paf_reads:
     output:
         "output/{sample}/bam/hpv_reads.paf"
     shell:
-        "minimap2 -cx map-ont GENOME_REF {input.fasta} > {output}"
+        "minimap2 -cx map-ont /projects/alignment_references/9606/hg38_no_alt_TCGA_HTMCP_HPVs/genome/minimap2-2.15-map-ont/hg38_no_alt_TCGA_HTMCP_HPVs_map-ont.mmi {input.fasta} > {output}"
 
 ### -------------------------------------------------------------------
-### Subset the methylation information to the HPV reads
+### extract methylation from reads (new chemistry)
 ### -------------------------------------------------------------------
 
-rule methyl_hpv_reads:
+rule extract_methyl:
     input:
-        names="output/{sample}/bam/hpv_read_names.txt",
-        tsv=lambda w: config["samples"][w.sample]["all_methyl"]
+        bai="output/{sample}/bam/hpv_reads.bam.bai",
+        bam="output/{sample}/bam/hpv_reads.bam"
     output:
-        "output/{sample}/methylation/hpv_reads_methylation.tsv"
+        extract="output/{sample}/methylation/hpv_reads_extract.tsv",
+        methyl="output/{sample}/methylation/hpv_reads_methylation.tsv"
+    threads: 20
+    log: "output/{sample}/log/extract_methyl.log"
     shell:
-        "grep -f {input.names} -F {input.tsv} > {output}"
+        "modkit extract --threads {threads} --allow-non-primary {input.bam} {output.extract} --read-calls-path {output.methyl} --log-filepath {log}"
 
-rule methyl_freq_hpv:
+rule pileup_methyl_hpv:
     input:
-        tsv="output/{sample}/methylation/methylation_frequency.tsv"
+        bai="output/{sample}/bam/hpv_reads.bam.bai",
+        bam="output/{sample}/bam/hpv_reads.bam"
     output:
-        "output/{sample}/methylation/hpv_methylation_frequency.tsv"
+        "output/{sample}/methylation/hpv_methylation_frequency.bed"
+    threads: 20
+    log: "output/{sample}/log/pileup_methyl_hpv.log"
     shell:
-        "grep HPV {input.tsv} > {output}"
+        "modkit pileup {input.bam} {output} --log-filepath {log}"
+
+### -------------------------------------------------------------------
+### Subset the methylation information to the HPV reads (old chemistry)
+### -------------------------------------------------------------------
+
+#rule methyl_hpv_reads:
+#    input:
+#        names="output/{sample}/bam/hpv_read_names.txt",
+#        tsv="output/{sample}/methylation/methylation.tsv"
+#    output:
+#        "output/{sample}/methylation/hpv_reads_methylation.tsv"
+#    shell:
+#        "grep -f {input.names} -F {input.tsv} > {output}"
+
+#rule methyl_freq_hpv:
+#    input:
+#        tsv="output/{sample}/methylation/methylation_frequency.tsv"
+#    output:
+#        "output/{sample}/methylation/hpv_methylation_frequency.tsv"
+#    shell:
+#        "grep HPV {input.tsv} > {output}"
 
 ### -------------------------------------------------------------------
 ### Run the integration event caller on the Sniffles VCF
@@ -113,10 +144,10 @@ rule methyl_freq_hpv:
 
 rule sniffles:
     input:
-        bam="output/{sample}/bam/all_reads.sorted.bam"
+        bam=lambda w: config["samples"][w.sample]["bam"]
     output:
         "output/{sample}/vcf/sniffles_output.vcf"
-    threads: 20
+    threads: 30
     shell:
         "sniffles --threads {threads} --max_distance 50 --max_num_splits -1 --report_BND --num_reads_report -1 --min_support 5 --min_seq_size 500 -m {input.bam} -v {output}"
 
@@ -129,17 +160,6 @@ checkpoint call_integration:
     shell:
         "scripts/callHPVintegration.R -v {input.vcf} -o {output}"
 
-### -------------------------------------------------------------------
-### Subset the methylation by event 
-### -------------------------------------------------------------------
-
-rule hpv_methyl_freq:
-    input:
-        tsv="output/{sample}/methylation/hpv_reads_methylation.tsv"
-    output:
-        "output/{sample}/methylation/event_methyl_freq.tsv"
-    shell: 
-        "scripts/eventMethylation.R -m {input.tsv} -d output/{wildcards.sample}/events -o {output}"
 
 ### -------------------------------------------------------------------
 ### Make bams and fastas for individual events
@@ -148,6 +168,7 @@ rule hpv_methyl_freq:
 rule event_bams:
     input:
         names="output/{sample}/events/event{i}.txt",
+        bai="output/{sample}/bam/hpv_reads.bam.bai",
         bam="output/{sample}/bam/hpv_reads.bam"
     output:
         "output/{sample}/events/event{i}.bam"
@@ -235,7 +256,7 @@ rule map_asm_ref_paf:
     output:
         "output/{sample}/asm/event{i}/assembly.hybrid.paf"
     shell:
-        "minimap2 -x asm5 GENOME_REF {input} > {output}"
+        "minimap2 -x asm5 /projects/alignment_references/9606/hg38_no_alt_TCGA_HTMCP_HPVs/genome/minimap2-2.15-map-ont/hg38_no_alt_TCGA_HTMCP_HPVs_map-ont.mmi {input} > {output}"
 
 rule map_reads_asm_paf:
     input:
@@ -288,26 +309,26 @@ rule asm_sniffles:
 ### RepeatMaster
 ### -------------------------------------------------------------------
 
-rule repeat_master:
-    input:
-        fasta="output/{sample}/events/event{i}.fasta"
-    output:
-        "output/{sample}/intTypeTest/event{i}/.scratch/reads.fasta.out.gff"
-    threads: 20
-    shell:
-        "singularity exec -B /projects,/home repeatmasker_4.1.2.p1--pl5321hdfd78af_1.sif RepeatMasker {input.fasta} -pa {threads} -gff -species human"
+#rule repeat_master:
+#    input:
+#        fasta="output/{sample}/events/event{i}.fasta"
+#    output:
+#        "output/{sample}/intType/event{i}/.scratch/reads.fasta.out.gff"
+#    threads: 20
+#    shell:
+#        "singularity exec -B /projects,/home /projects/vporter_prj/tools/repeatmasker_4.1.2.p1--pl5321hdfd78af_1.sif RepeatMasker {input.fasta} -pa {threads} -gff -species human"
 
 ### -------------------------------------------------------------------
 ### get regions before and after integration sites
 ### -------------------------------------------------------------------
 
-rule split_summary:
-    input:
-        summary = "output/{sample}/events/summary.txt"
-    output:
-        "output/{sample}/intTypeTest/event{i}/.scratch/event_summary.txt"
-    shell:
-        "grep {wildcards.event} {input.summary} > {output}"
+#rule split_summary:
+#    input:
+#        summary = "output/{sample}/events/summary.txt"
+#    output:
+#        "output/{sample}/intTypeTest/event{i}/.scratch/event_summary.txt"
+#    shell:
+#        "grep {wildcards.event} {input.summary} > {output}"
 
 
 ### -------------------------------------------------------------------
@@ -317,31 +338,31 @@ rule split_summary:
 def aggregate_input1(wildcards):
     checkpoint_output = checkpoints.call_integration.get(**wildcards).output[0]
     return expand('output/{sample}/asm/event{i}/assembly.hybrid.paf',
-		sample=SAMPLES,
+		sample=SAMPLE,
 		i=glob_wildcards(os.path.join(checkpoint_output, 'event{i}.txt')).i)
 
 def aggregate_input2(wildcards):
     checkpoint_output = checkpoints.call_integration.get(**wildcards).output[0]
     return expand('output/{sample}/asm/event{i}/reads.asm.paf',
-		sample=SAMPLES,
+		sample=SAMPLE,
 		i=glob_wildcards(os.path.join(checkpoint_output, 'event{i}.txt')).i)
 
 def aggregate_input3(wildcards):
     checkpoint_output = checkpoints.call_integration.get(**wildcards).output[0]
     return expand('output/{sample}/asm/event{i}/sniffles_asm.vcf',
-		sample=SAMPLES,
+		sample=SAMPLE,
 		i=glob_wildcards(os.path.join(checkpoint_output, 'event{i}.txt')).i)
 
 def aggregate_input4(wildcards):
     checkpoint_output = checkpoints.call_integration.get(**wildcards).output[0]
     return expand('output/{sample}/depth/event{i}_depth.txt',
-		sample=SAMPLES,
+		sample=SAMPLE,
 		i=glob_wildcards(os.path.join(checkpoint_output, 'event{i}.txt')).i)
 
 def aggregate_input5(wildcards):
     checkpoint_output = checkpoints.call_integration.get(**wildcards).output[0]
     return expand('output/{sample}/depth/hpv.site{i}_depth.txt',
-		sample=SAMPLES,
+		sample=SAMPLE,
 		i=glob_wildcards(os.path.join(checkpoint_output, 'hpv.site{i}.txt')).i)
 
 rule final1:

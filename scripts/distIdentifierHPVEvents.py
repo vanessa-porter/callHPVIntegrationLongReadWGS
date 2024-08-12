@@ -26,5 +26,5 @@ for i in [*range(0,len(summary),1)]:
 summary['identifier'] = id
 
 # save as a new table
-eventsOutPath = "output/" + SAMPLE + "/events/hpv_integration_events_dist.bed"
+eventsOutPath = "output/" + SAMPLE + "/events/hpv_integration_events_dist.txt"
 pd.DataFrame.to_csv(summary, path_or_buf = eventsOutPath, sep = "\t", header = True, index = False)

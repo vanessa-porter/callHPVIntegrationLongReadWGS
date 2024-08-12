@@ -1,8 +1,5 @@
 import os
-
-samples_dict = config["samples"]
-sample_ids = samples_dict.keys()
-
+SAMPLE = os.environ.get("SAMPLE")
 asmPath = "output/" + SAMPLE + "/asm/"
 EVENTS_ASM = [f for f in os.listdir(asmPath) if not f.startswith('.')]
 
@@ -18,14 +15,14 @@ for d in eventsPath:
             e = d.replace(asmPath, "")
             eventsASM.append(e)
 
-REF = config["GENOME_MMI"]
+REF = "/projects/alignment_references/9606/hg38_no_alt_TCGA_HTMCP_HPVs/genome/minimap2-2.15-map-ont/hg38_no_alt_TCGA_HTMCP_HPVs_map-ont.mmi"
 
 ### -------------------------------------------------------------------
 ### Target rule
 ### -------------------------------------------------------------------
 rule all:
 	input:
-		expand("output/{sample}/intType/{event}/intTest3.txt", sample=sample_ids, event=eventsASM)
+		expand("output/{sample}/intType/{event}/intTest3.txt", sample=SAMPLE, event=eventsASM)
 
 ### -------------------------------------------------------------------
 ### Make bed files

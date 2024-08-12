@@ -1,7 +1,6 @@
 import os
 import pandas as pd
-samples_dict = config["samples"]
-sample_ids = samples_dict.keys()
+SAMPLE = os.environ.get("SAMPLE")
 
 # get the events for the sample
 eventsPath = "output/" + SAMPLE + "/events/summary.txt"
@@ -17,11 +16,13 @@ if (none > 0):
 ### -------------------------------------------------------------------
 rule all:
 	input:
-            expand("output/{sample}/intType/{event}/intTest1.txt", sample=sample_ids, event=EVENTS),
+            expand("output/{sample}/intType/{event}/intTest1.txt", sample=SAMPLE, event=EVENTS),
             #expand("output/{sample}/cn/{event}/regionsMeanDepth.bed", sample=SAMPLE, event=EVENTS),
             #expand("output/{sample}/cn/{event}/breakpoint_merge.bed", sample=SAMPLE, event=EVENTS),
-            expand("output/{sample}/events/{event}_SVsubset.bedpe", sample=sample_ids, event=EVENTS),
-            expand("output/{sample}/events/{event}_SVsubset.bed", sample=sample_ids, event=EVENTS)
+            expand("output/{sample}/methylation/event_methyl_freq.tsv", sample=SAMPLE),
+            expand("output/{sample}/hpv_size/hpvSizeCategories.txt", sample=SAMPLE),
+            expand("output/{sample}/events/{event}_SVsubset.bedpe", sample=SAMPLE, event=EVENTS),
+            expand("output/{sample}/events/{event}_SVsubset.bed", sample=SAMPLE, event=EVENTS)
 
 ### -------------------------------------------------------------------
 ### RepeatMaster
@@ -42,7 +43,32 @@ rule repeat_master:
         "output/{sample}/intType/{event}/reads.fasta.out.gff"
     threads: 20
     shell:
-        "singularity exec -B /projects,/home repeatmasker_4.1.2.p1--pl5321hdfd78af_1.sif RepeatMasker {input.fasta} -pa {threads} -gff -species human"
+        "singularity exec -B /projects,/home /projects/vporter_prj/tools/repeatmasker_4.1.2.p1--pl5321hdfd78af_1.sif RepeatMasker {input.fasta} -pa {threads} -gff -species human"
+
+### -------------------------------------------------------------------
+### Subset the methylation by event 
+### -------------------------------------------------------------------
+
+rule hpv_methyl_freq:
+    input:
+        tsv="output/{sample}/methylation/hpv_reads_methylation.tsv"
+    output:
+        "output/{sample}/methylation/event_methyl_freq.tsv"
+    shell: 
+        "scripts/eventMethylationNewChemistry.R -m {input.tsv} -d output/{wildcards.sample}/events -o {output}"
+
+### -------------------------------------------------------------------
+### Calculate the HPV size
+### -------------------------------------------------------------------
+
+rule hpv_integrant_size:
+    input:
+        paf="output/{sample}/bam/hpv_reads.paf",
+        summary="output/{sample}/events/summary.txt"
+    output:
+        "output/{sample}/hpv_size/hpvSizeCategories.txt"
+    shell: 
+        "scripts/hpv_integrant_size.R -p {input.paf} -s {input.summary} -o output/{wildcards.sample}/hpv_size"
 
 ### -------------------------------------------------------------------
 ### SVs associateed with the event
@@ -66,7 +92,7 @@ rule bedpe:
         "output/{sample}/events/{event}_SVsubset.bedpe"
     conda: "config/conda.yaml"
     shell:
-        "SURVIVOR vcftobed {input.vcf} 5 -1 {output}"
+        "/gsc/software/linux-x86_64-centos7/survivor-1.0.3/bin/SURVIVOR vcftobed {input.vcf} 5 -1 {output}"
 
 ### -------------------------------------------------------------------
 ### get regions before and after integration sites

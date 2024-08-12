@@ -1,4 +1,5 @@
 #!/gsc/software/linux-x86_64-centos7/R-4.0.2/bin/Rscript --vanilla
+.libPaths("/projects/vporter_prj/R/x86_64-centos7-linux-gnu-library/4.0")
 
 #Note: these packages need to be installed.
 suppressMessages(library(optparse))
@@ -17,6 +18,12 @@ suppressMessages(library(ggsci))
 ### READ IN FILES - best example = HTMCP-03-06-02238
 ### -------------------------------------------------------------------------------
 
+#pafr <- read_paf("/projects/hpv_nanopore_prj/htmcp/call_integration/output/HTMCP-03-06-02097/bam/hpv_reads.paf")
+#sum <- read.delim("/projects/hpv_nanopore_prj/htmcp/call_integration/output/HTMCP-03-06-02097/events/summary.txt", header = T)
+#out <- "/projects/hpv_nanopore_prj/htmcp/call_integration/output/HTMCP-03-06-02097/hpv_size/"
+
+hpv <- read.delim("/projects/hpv_nanopore_prj/refs/HPV_all_chromsizes.txt", header = F)
+
 # Make help options
 option_list = list(
   make_option(c("-p", "--paf"), type="character", default=NULL,
@@ -24,9 +31,7 @@ option_list = list(
   make_option(c("-s", "--sum"), type="character", default=NULL,
               help="summary file for the integration events", metavar="character"),
   make_option(c("-o", "--out"), type="character", default = "./",
-              help="Output folder name", metavar="character"),
-  make_option(c("-c", "--hpvchrom"), type="character", default = "./",
-              help="HPV Chromosome sizes", metavar="character")
+              help="Output folder name", metavar="character")
 )
 
 # load in options 
@@ -35,7 +40,6 @@ opt <- parse_args(opt_parser)
 out <- opt$out
 pafr <- read_paf(opt$paf)
 sum <- read.delim(opt$sum, header = T)
-hpv <- read.delim(opt$hpvchrom, header = F)
 
 ### -------------------------------------------------------------------------------
 ### READ IN FILES - best example = HTMCP-03-06-02238
@@ -139,116 +143,183 @@ for (r in 1:length(reads)) {
   chrFactors <- factor(chrFactors, levels = chrFactors)
   p$breakpoint2[p$breakpoint != "HPV"] <- paste0("break",as.numeric(chrFactors))
   breaks <- unique(p$breakpoint2[!is.na(p$breakpoint2)])
+  order <- as.numeric(rownames(p[p$breakpoint2 %in% breaks,]))
   
-  if(length(breaks) > 1){
-    df <- data.frame(read = rep(reads[r],length(2:length(breaks))), 
-                     break1 = NA, break2 = NA, 
-                     HPVbreak1 = NA, HPVbreak2 = NA,  
-                     length = NA,
-                     status=rep("complete",length(2:length(breaks))))
-    for (i in 2:length(breaks)) {
-      break1 <- breaks[i-1]
-      break2 <- breaks[i]
-      
-      # get the rows in between break1 and break2
-      psub1 <- p[p$breakpoint2 == break1,]
-      psub1 <- psub1[complete.cases(psub1[,-c(12,13)]),]
-      rows1 <- as.numeric(rownames(psub1))
-      psub2 <- p[p$breakpoint2 == break2,]
-      psub2 <- psub2[complete.cases(psub2[,-c(12,13)]),]
-      rows2 <- as.numeric(rownames(psub2))
-      btw <- c((rows1+1):(rows2-1))
-      
-      # find which chromosome is between the breaks
-      btw_chr <- unique(p$tname[rownames(p) %in% btw])
-      
-      if(grepl("HPV", btw_chr)){
-        pbtw <- p[rownames(p) %in% btw,]
-        btw_start <- p$tstart2[rownames(p) == min(btw)]
-        btw_end <- p$tend2[rownames(p) == max(btw)]
-        length <-  max(pbtw$qend) - min(pbtw$qstart)
-        
-        # make a dataframe with the length of HPV in between the breaks
-        if(!is.na(psub1$tend2) & !is.na(psub2$tstart2) & !is.na(btw_start) & !is.na(btw_end) & psub2$tstart2 != psub1$tend2){
-          bps <- c(as.numeric(psub1$tend2), as.numeric(psub2$tstart2))
-          chrs <- c(psub1$tname, psub2$tname)
-          hpv_bps <- c(btw_start,btw_end)
+  if(!all(is.na(p$tstart2)) & !all(is.na(p$tend2))){
+      if(length(breaks) > 1 & sum(!is.na(p$tend2)) > 1 & sum(!is.na(p$tstart2))){
+          df <- data.frame(read = rep(reads[r],length(2:length(breaks))), 
+                           break1 = NA, break2 = NA, 
+                           HPVbreak1 = NA, HPVbreak2 = NA,  
+                           length = NA,
+                           status=rep("complete",length(2:length(breaks))))
+          for (i in 2:length(breaks)) {
+              break1 <- breaks[i-1]
+              break2 <- breaks[i]
+              
+              # get the rows in between break1 and break2
+              psub1 <- p[p$breakpoint2 == break1,]
+              psub1 <- psub1[complete.cases(psub1[,-c(12,13)]),]
+              rows1 <- as.numeric(rownames(psub1))
+              psub2 <- p[p$breakpoint2 == break2,]
+              psub2 <- psub2[complete.cases(psub2[,-c(12,13)]),]
+              rows2 <- as.numeric(rownames(psub2))
+              btw <- c((rows1+1):(rows2-1))
+              
+              # find which chromosome is between the breaks
+              btw_chr <- unique(p$tname[rownames(p) %in% btw])
+              
+              if(grepl("HPV", btw_chr)){
+                  pbtw <- p[rownames(p) %in% btw,]
+                  btw_start <- p$tstart2[rownames(p) == min(btw)]
+                  btw_end <- p$tend2[rownames(p) == max(btw)]
+                  length <-  max(pbtw$qend) - min(pbtw$qstart)
+                  
+                  # make a dataframe with the length of HPV in between the breaks
+                  if(!is.na(psub1$tend2) & !is.na(psub2$tstart2) & !is.na(btw_start) & !is.na(btw_end) & psub2$tstart2 != psub1$tend2){
+                      bps <- c(as.numeric(psub1$tend2), as.numeric(psub2$tstart2))
+                      chrs <- c(psub1$tname, psub2$tname)
+                      hpv_bps <- c(btw_start,btw_end)
+                      
+                      b1 <- which.min(bps)
+                      b2 <- which.max(bps)
+                      
+                      df[i-1,] <- data.frame(read = reads[r], 
+                                             break1 = paste0(chrs[b1], ":", bps[b1]), 
+                                             break2 = paste0(chrs[b2], ":", bps[b2]), 
+                                             HPVbreak1 = paste0(btw_chr, ":", hpv_bps[b1]),  
+                                             HPVbreak2 = paste0(btw_chr, ":", hpv_bps[b2]),  
+                                             length = length, status = "complete")
+                      df <- df[complete.cases(df),]
+                      rList[[r]] <- df
+                  }
+              }
+          }
+      } else if (length(breaks) == 1 & nrow(p) > 1){
+          # find the length of the HPV chromosomes following the break
+          bp <- rownames(p)[p$breakpoint2 == breaks & complete.cases(p$breakpoint2)]
+          other_rows <- rownames(p)[is.na(p$breakpoint2)]
           
-          b1 <- which.min(bps)
-          b2 <- which.max(bps)
+          # test that the hpv alignments before/after the break are sequential 
+          diff_test <- rle(diff(as.numeric(other_rows)))
           
-          df[i-1,] <- data.frame(read = reads[r], 
-                                 break1 = paste0(chrs[b1], ":", bps[b1]), 
-                                 break2 = paste0(chrs[b2], ":", bps[b2]), 
-                                 HPVbreak1 = paste0(btw_chr, ":", hpv_bps[b1]),  
-                                 HPVbreak2 = paste0(btw_chr, ":", hpv_bps[b2]),  
-                                 length = length, status = "complete")
-          df <- df[complete.cases(df),]
+          # get the positions of the HPV alignments with the max * of sequential alignments
+          if(length(diff_test$lengths) == 3){
+              if(diff_test$lengths[1] > diff_test$lengths[3]){
+                  other_rows <- other_rows[1:(diff_test$lengths[1]+1)]
+              } else {
+                  other_rows <- other_rows[!1:length(other_rows) %in% 1:(diff_test$lengths[1]+1)]
+              }
+          } else if(length(diff_test$lengths) == 2){
+              run <- which(diff_test$values == 1)
+              
+              if(run ==1){
+                  other_rows <- other_rows[1:(diff_test$lengths[1]+1)]
+              } else if(run ==2){
+                  other_rows <- other_rows[!1:length(other_rows) %in% 1:(diff_test$lengths[1])]
+              }
+          }
+          
+          # test if the position of the HPV break has a reoccurring breakpoint
+          hpv_break <- other_rows[which((abs(as.numeric(bp) - as.numeric(other_rows))) == 1)]
+          hpv_start <- p[hpv_break,"tstart2"]
+          hpv_end <- p[hpv_break,"tend2"]
+          
+          # get the hpv breakpoint depending on if the alignments are before or after the human alignment
+          if(as.numeric(bp) > as.numeric(hpv_break)){
+              hpvbreak <- hpv_end
+          } else if(as.numeric(bp) < as.numeric(hpv_break)){
+              hpvbreak <- hpv_start
+          }
+          
+          # get the breakpoint of the human chromosome
+          bp_start <- p[bp,"tstart2"]
+          bp_end <- p[bp,"tend2"]
+          
+          if(as.numeric(bp) > as.numeric(hpv_break)){
+              bp_pos <- bp_start
+          } else if(as.numeric(bp) < as.numeric(hpv_break)){
+              bp_pos <- bp_end
+          }
+          
+          # get the length of the incomplete HPV segment
+          phpv <- p[rownames(p) %in% other_rows,]
+          length <-  max(phpv$qend) - min(phpv$qstart)
+          
+          # get the breakpoint position
+          break1 = paste0(p[bp,"tname"], ":", bp_pos)
+          
+          # put the values in the dataframe
+          if(!is.na(hpvbreak)){
+              hpv_pos <- paste0(p[hpv_break, "tname"],":",hpvbreak)
+              df <- data.frame(read = reads[r], 
+                               break1 = break1, break2 = NA, HPVbreak1 = hpv_pos, HPVbreak2 = NA,  length = length, status="incomplete")
+          }
+          
           rList[[r]] <- df
-        }
-      }
+          
+      } else if(length(breaks) > 1 & max(diff(order)) == 1){
+          # find the length of the HPV chromosomes following the breaks
+          bp <- rownames(p)[p$breakpoint2 == breaks & complete.cases(p$breakpoint2)]
+          other_rows <- rownames(p)[is.na(p$breakpoint2)]
+          
+          # test that the hpv alignments before/after the break are sequential 
+          diff_test <- rle(diff(as.numeric(other_rows)))
+          
+          # get the positions of the HPV alignments with the max * of sequential alignments
+          if(length(diff_test$lengths) == 3){
+              if(diff_test$lengths[1] > diff_test$lengths[3]){
+                  other_rows <- other_rows[1:(diff_test$lengths[1]+1)]
+              } else {
+                  other_rows <- other_rows[!1:length(other_rows) %in% 1:(diff_test$lengths[1]+1)]
+              }
+          } else if(length(diff_test$lengths) == 2){
+              run <- which(diff_test$values == 1)
+              
+              if(run ==1){
+                  other_rows <- other_rows[1:(diff_test$lengths[1]+1)]
+              } else if(run ==2){
+                  other_rows <- other_rows[!1:length(other_rows) %in% 1:(diff_test$lengths[1])]
+              }
+          }
+          
+          # test if the position of the HPV break has a reoccurring breakpoint
+          hpv_break <- other_rows
+          hpv_start <- p[other_rows,"tstart2"]
+          hpv_end <- p[other_rows,"tend2"]
+          
+          # get the hpv breakpoint depending on if the alignments are before or after the human alignment
+          if(min(as.numeric(bp)) > max(as.numeric(other_rows))){
+              hpvbreak <- hpv_end
+          } else if(max(as.numeric(bp)) < min(as.numeric(other_rows))){
+              hpvbreak <- hpv_start
+          }
+          
+          # get the breakpoint of the human chromosome
+          bp_start <- p[bp,"tstart2"]
+          bp_end <- p[bp,"tend2"]
+          
+          if(min(as.numeric(bp)) > max(as.numeric(other_rows))){
+              bp_pos <- bp_start
+          } else if(max(as.numeric(bp)) < min(as.numeric(other_rows))){
+              bp_pos <- bp_end
+          }
+          
+          # get the length of the incomplete HPV segment
+          phpv <- p[rownames(p) %in% other_rows,]
+          length <-  max(phpv$qend) - min(phpv$qstart)
+          
+          # get the breakpoint position
+          break1 = paste0(p[bp,"tname"], ":", bp_pos)
+          
+          # put the values in the dataframe
+          if(!all(is.na(hpvbreak))){
+              hpv_pos <- paste0(p[hpv_break, "tname"],":",hpvbreak)
+              df <- data.frame(read = reads[r], 
+                               break1 = break1, break2 = NA, HPVbreak1 = hpv_pos, HPVbreak2 = NA,  length = length, status="incomplete")
+          }
+          
+          rList[[r]] <- df
     }
-  } else if (length(breaks) == 1 & nrow(p) > 1){
-    # find the length of the HPV chromosomes following the break
-    bp <- rownames(p)[p$breakpoint2 == breaks & complete.cases(p$breakpoint2)]
-    other_rows <- rownames(p)[is.na(p$breakpoint2)]
-    
-    # test that the hpv alignments before/after the break are sequential 
-    diff_test <- rle(diff(as.numeric(other_rows)))
-    
-    # get the positions of the HPV alignments with the max * of sequential alignments
-    if(length(diff_test$lengths) == 3){
-      if(diff_test$lengths[1] > diff_test$lengths[3]){
-        other_rows <- other_rows[1:(diff_test$lengths[1]+1)]
-      } else {
-        other_rows <- other_rows[!1:length(other_rows) %in% 1:(diff_test$lengths[1]+1)]
-      }
-    } else if(length(diff_test$lengths) == 2){
-      run <- which(diff_test$values == 1)
-      
-      if(run ==1){
-        other_rows <- other_rows[1:(diff_test$lengths[1]+1)]
-      } else if(run ==2){
-        other_rows <- other_rows[!1:length(other_rows) %in% 1:(diff_test$lengths[1])]
-      }
-    }
-    
-    # test if the position of the HPV break has a reoccurring breakpoint
-    hpv_break <- other_rows[which((abs(as.numeric(bp) - as.numeric(other_rows))) == 1)]
-    hpv_start <- p[hpv_break,"tstart2"]
-    hpv_end <- p[hpv_break,"tend2"]
-    
-    # get the hpv breakpoint depending on if the alignments are before or after the human alignment
-    if(as.numeric(bp) > as.numeric(hpv_break)){
-      hpvbreak <- hpv_end
-    } else if(as.numeric(bp) < as.numeric(hpv_break)){
-      hpvbreak <- hpv_start
-    }
-    
-    # get the breakpoint of the human chromosome
-    bp_start <- p[bp,"tstart2"]
-    bp_end <- p[bp,"tend2"]
-    
-    if(as.numeric(bp) > as.numeric(hpv_break)){
-      bp_pos <- bp_start
-    } else if(as.numeric(bp) < as.numeric(hpv_break)){
-      bp_pos <- bp_end
-    }
-    
-    # get the length of the incomplete HPV segment
-    phpv <- p[rownames(p) %in% other_rows,]
-    length <-  max(phpv$qend) - min(phpv$qstart)
-    
-    # get the breakpoint position
-    break1 = paste0(p[bp,"tname"], ":", bp_pos)
-    
-    # put the values in the dataframe
-    if(!is.na(hpvbreak)){
-      hpv_pos <- paste0(p[hpv_break, "tname"],":",hpvbreak)
-      df <- data.frame(read = reads[r], 
-                       break1 = break1, break2 = NA, HPVbreak1 = hpv_pos, HPVbreak2 = NA,  length = length, status="incomplete")
-    }
-    rList[[r]] <- df
   }
 }
 
@@ -479,6 +550,21 @@ categories <- size %>%
 write.table(hpvSize, file = paste0(out, "/hpvSizeReads.txt"), quote = F, col.names = T, row.names = F, sep = "\t")
 write.table(categories, file = paste0(out, "/hpvSizeCategories.txt"), quote = F, col.names = T, row.names = F, sep = "\t")
 
+### -------------------------------------------------------------------------------
+### DOT PLOT OF A SELECTED READ
+### -------------------------------------------------------------------------------
+#bp <- paf.tab[paf.tab$qname %in% hpvSize$read[hpvSize$bp_pair_name == "break-pair18"],]
+  
+### plot
+#ggplot(bp %>% filter(tname %in% c(unique(sum$HPVchr), unique(sum$chr)))) +
+#  aes(x=qstart, xend=qend, y=tstart, yend=tend, colour=tname) +
+#  geom_segment(size = 1) +
+#  xlab("Read Position") + ylab("Reference Position") +
+#  theme_bw() +
+#  scale_color_lancet() +
+  #geom_hline(yintercept = 189748099, linetype = 2) +
+#  facet_grid(tname ~ qname, shrink=TRUE, scales = "free", space = "free") + 
+#  theme(panel.grid = element_blank())
 
 
 

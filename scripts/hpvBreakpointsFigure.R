@@ -1,4 +1,5 @@
 #!/gsc/software/linux-x86_64-centos7/R-4.0.2/bin/Rscript --vanilla
+.libPaths("/projects/vporter_prj/R/x86_64-centos7-linux-gnu-library/4.0")
 
 #Note: these packages need to be installed.
 suppressMessages(library(optparse))
@@ -11,6 +12,9 @@ suppressMessages(library(RColorBrewer))
 suppressMessages(library(pafr))
 suppressMessages(library(tidyverse))
 suppressMessages(library(ggsci))
+
+#cat <- read.delim("/projects/hpv_nanopore_prj/cell_lines/call_integration/output/hela/hpv_size/hpvSizeCategories.txt", header = T)
+#out <- "/projects/hpv_nanopore_prj/cell_lines/call_integration/output/hela/hpv_size/hpv_breakpoints.pdf"
 
 # Make help options
 option_list = list(

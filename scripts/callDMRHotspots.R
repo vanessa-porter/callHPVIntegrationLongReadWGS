@@ -12,9 +12,7 @@ option_list = list(
   make_option(c("-v", "--hpv"), type="character", default=NULL, 
               help="HPV integration regions bed file", metavar="character"),
   make_option(c("-o", "--out"), type="character", default=NULL, 
-              help="Output directory", metavar="character"),
-  make_option(c("-c", "--chrom"), type="character", default=NULL, 
-              help="Chromosome sizes", metavar="character"),
+              help="Output directory", metavar="character")
 )
 
 opt_parser = OptionParser(option_list=option_list)
@@ -29,13 +27,22 @@ suppressMessages(library(tidyr))
 ### Read in Files
 ### ----------------------------------------------------------
 
+# practice files
+#dmr <- read.delim("/projects/hpv_nanopore_prj2/htmcp/lims_fnn/rerun/HTMCP_125_F127658/differential_methylation/F127658_Results_callDMR.txt.gz", header = T)
+#out <- "/projects/hpv_nanopore_prj/htmcp/call_integration/output/HTMCP-03-06-02002-test/methylation"
+#hpv <- read.delim("/projects/hpv_nanopore_prj/htmcp/call_integration/output/HTMCP-03-06-02002-test/events/hpv_integration_events_distance.bed", header = F)
+#pr <- read.delim("/projects/hpv_nanopore_prj/htmcp/call_integration/output/HTMCP-03-06-02063/event_phase/phased_regions.bed", header = F)
+
 # get the inputs
 dmr <- read.delim(opt$dmr, header = T)
 out <- opt$out
 hpv <- read.delim(opt$hpv, header = F)
 
+# subset to only conventional chromosomes
+dmr <- dmr %>% filter(chr %in% c(paste0("chr", 1:22), "chrX"))
+
 # chromosome lengths
-cl <- read.delim(opt$chrom, header = F)
+cl <- read.delim("/projects/hpv_nanopore_prj/refs/hg38_chromSizes.txt", header = F)
 sl <- cl$V2
 names(sl) <- cl$V1
 
@@ -68,7 +75,7 @@ breakpointHotspotter <- function(breaks, sample){
     if (length(grc)>1) {
       nbins <- round(sl[chrom] / 10000)
       midpoints <- (start(grc)+end(grc))/2
-      kde <- stats::density(midpoints,bw=bw,kernel='gaussian', from = 0, to = sl[chrom], n = nbins)
+      kde <- stats::density(midpoints,bw=bw,kernel='gaussian', from = 0, to = sl[chrom], n = nbins, )
       
       # Random distribution of genomic events
       kde.densities <- numeric()
@@ -158,7 +165,7 @@ breakpointHotspotter <- function(breaks, sample){
 ### Run Functions
 ### ----------------------------------------------------------
 
-bh <- breakpointHotspotter(dmr, out)
+bh <- breakpointHotspotter(breaks = dmr, sample = out)
 
 ### -----------------------------------------------------------------
 ### PRELIM TEST ON THE REGION
@@ -215,7 +222,7 @@ hs$chr <- factor(hs$chr,levels = c(paste0("chr", 1:22),"chrX" ))
 
 #### PLOT ALL CHROMOSOMES
 densityALL <- ggplot(densitySummary)+
-  geom_point(aes(x = mp_Mb, y = ds, color = type),size=1)+
+  geom_path(aes(x = mp_Mb, y = ds, color = type),size=1)+
   geom_rect(data = hs, aes(xmin = start/1000000, xmax = end/1000000, ymin = max_xy - (max_xy/15), ymax = max_xy)) +
   facet_wrap(~chr,scales="free")+
   theme_bw() +

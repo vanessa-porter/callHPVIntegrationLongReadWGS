@@ -1,4 +1,5 @@
 #!/gsc/software/linux-x86_64-centos7/R-4.0.2/bin/Rscript --vanilla
+.libPaths("/projects/vporter_prj/R/x86_64-centos7-linux-gnu-library/4.0")
 
 #Note: these packages need to be installed.
 suppressMessages(library(optparse))
@@ -9,7 +10,7 @@ suppressMessages(library(stringr))
 suppressMessages(library(dplyr))
 suppressMessages(library(pafr))
 suppressMessages(library(bedtoolsr))
-options(bedtools.path = "/path/to/bedtools-2.27.1/bin")
+options(bedtools.path = "/gsc/software/linux-x86_64-centos7/bedtools-2.27.1/bin")
 
 # Make help options
 option_list = list(
@@ -22,6 +23,10 @@ option_list = list(
 # load in required 
 opt_parser = OptionParser(option_list=option_list)
 opt = parse_args(opt_parser)
+
+# practice files
+#vcf <- read.delim("/projects/hpv_nanopore_prj/htmcp/call_integration/F46073/vcf/sniffles_output.vcf", comment.char = '#', header = F, sep = "\t", stringsAsFactors = F)
+#vcf <- read.delim("/projects/hpv_nanopore_prj/htmcp/call_integration/D77541_D81469/vcf/sniffles_output.vcf", comment.char = '#', header = F, sep = "\t", stringsAsFactors = F)
 
 # read in necessary files
 vcf <- read.delim(opt$vcf, comment.char = '#', header = F, sep = "\t", stringsAsFactors = F)
@@ -54,6 +59,17 @@ vcf$SV.id <- paste0(vcf$SV.type, rownames(vcf))
 
 # subset the translocations
 tra <- vcf[vcf$SV.type == "TRA",]
+  
+#tra <- vcf[vcf$SV.type == "BND",]
+# Translocation's chr and position on the second chromosome
+#chrpos <- tra$V5
+#chrpos <- gsub("[", "", chrpos, fixed = T)
+#chrpos <- gsub("]", "", chrpos, fixed = T)
+#chrpos <- gsub("N", "", chrpos)
+#chr <- gsub(":.*", "", chrpos)
+#pos <- gsub(".*:", "", chrpos)
+#tra$chr2 <- chr
+#tra$end <- pos
 
 # Make contingincies if there are 0, 1, and >1 HPV integration sites in the sample
 if (nrow(tra[grep("HPV",tra$chr2),]) == 0)  {
@@ -399,4 +415,14 @@ if (nrow(tra[grep("HPV",tra$chr2),]) == 0)  {
   events_bed$pos.1 <- events_bed$pos.1 + 1
   write.table(events_bed, file = paste0(outdir,"/hpv_integration_sites.bed"), sep = "\t", quote = F, col.names = F, row.names = F)
   
+  ####
+  #### Find the human SVs associated with HPV-integration events 
+  ####
+  
+  #event_hg_SV <- NULL
+  #for (event in names(event_reads)) {
+  #  event_SV <- filter(vcf, grepl(paste(event_reads[[event]], collapse="|"), V8))
+  #  event_hg_SV[[event]] <- event_SV
+  #  write.table(event_SV[,1:10], file = paste0(outdir,"/", event, ".vcf"), sep = "\t", quote = F, col.names = F, row.names = F)
+  #}
 }
