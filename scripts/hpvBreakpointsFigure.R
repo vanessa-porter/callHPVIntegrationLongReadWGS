@@ -1,6 +1,10 @@
-#!/gsc/software/linux-x86_64-centos7/R-4.0.2/bin/Rscript --vanilla
+#!/usr/bin/env Rscript
+# install packages
+list.of.packages <- c("optparse", "reshape2", "ggplot2", "tidyr", "stringr","dplyr","pafr", "RColorBrewer", "tidyverse", "ggsci")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
 
-#Note: these packages need to be installed.
+# load packages
 suppressMessages(library(optparse))
 suppressMessages(library(reshape2))
 suppressMessages(library(ggplot2))

@@ -43,7 +43,7 @@ rule repeat_master:
         "output/{sample}/intType/{event}/reads.fasta.out.gff"
     threads: 20
     shell:
-        "singularity exec -B /projects,/home /projects/vporter_prj/tools/repeatmasker_4.1.2.p1--pl5321hdfd78af_1.sif RepeatMasker {input.fasta} -pa {threads} -gff -species human"
+        "singularity exec -B /projects,/home RepeatMasker {input.fasta} -pa {threads} -gff -species human"
 
 ### -------------------------------------------------------------------
 ### Subset the methylation by event 
@@ -92,7 +92,7 @@ rule bedpe:
         "output/{sample}/events/{event}_SVsubset.bedpe"
     conda: "config/conda.yaml"
     shell:
-        "/gsc/software/linux-x86_64-centos7/survivor-1.0.3/bin/SURVIVOR vcftobed {input.vcf} 5 -1 {output}"
+        "SURVIVOR vcftobed {input.vcf} 5 -1 {output}"
 
 ### -------------------------------------------------------------------
 ### get regions before and after integration sites

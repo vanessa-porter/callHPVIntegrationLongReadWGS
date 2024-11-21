@@ -1,6 +1,10 @@
-#!/gsc/software/linux-x86_64-centos7/R-4.0.2/bin/Rscript --vanilla
+#!/usr/bin/env Rscript
 
-#Note: these packages need to be installed.
+#install and load packages
+list.of.packages <- c("optparse")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
 library(optparse)
 
 option_list = list(
@@ -14,7 +18,7 @@ option_list = list(
               help="Number of CPU threads to use [default= %default]", metavar="numeric"),
   make_option(c("-m", "--minreads"), type="numeric", default=3, 
               help="Minimum number of reads per CpG site to be included [default= %default]", metavar="numeric"),
-  make_option(c("-f", "--fai"), type="character", default='/projects/alignment_references/Homo_sapiens/hg38_no_alt/genome/fasta/hg38_no_alt.fa.fai', 
+  make_option(c("-f", "--fai"), type="character", default='/path/to/hg38_no_alt/genome/fasta/hg38_no_alt.fa.fai', 
               help="FASTA index for ref genome for splitting [default= %default]", metavar="character")
 )
 
@@ -39,7 +43,6 @@ min_reads <- opt$minreads
 #Load data and convert to DSS' format:
 
 hap.1 <- fread(opt$methfile1)
-#hap.1 <- fread("/projects/hpv_nanopore_prj2/htmcp/lims_fnn/F46078/methyl_phase/F46078_NanoMethPhase_HP1_MethylFrequency.tsv")
 
 hap_1 <- hap.1[,c(1,2,5,6)]
 colnames(hap_1) <- c('chr', 'pos', 'N', 'X')
@@ -47,7 +50,6 @@ hap_1 <- hap_1[which(hap_1$N >= min_reads),]
 hap_1 <- hap_1[hap_1$chr %in% c(paste0("chr", 1:22), "chrX"),]
 
 hap.2 <- fread(opt$methfile2)
-#hap.2 <- fread("/projects/hpv_nanopore_prj2/htmcp/lims_fnn/F46078/methyl_phase/F46078_NanoMethPhase_HP2_MethylFrequency.tsv")
 
 hap_2 <- hap.2[,c(1,2,5,6)]
 colnames(hap_2) <- c('chr', 'pos', 'N', 'X')
@@ -61,8 +63,6 @@ rm(hap.1, hap.2, hap_1, hap_2)
 gc()
 
 #Get chr lengths so we can divide the genome into tiles for parallelisation:
-
-fai.info <- fread('/projects/alignment_references/Homo_sapiens/hg38_no_alt/genome/fasta/hg38_no_alt.fa.fai')
 fai.info <- fread(opt$fai)
 fai.info <- as.data.frame(fai.info)
 rownames(fai.info) <- fai.info$V1

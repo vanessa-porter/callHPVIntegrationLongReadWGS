@@ -5,15 +5,6 @@ SAMPLE = os.environ.get("SAMPLE")
 configfile: "config/samples.yaml"
 configfile: "config/parameters.yaml"
 
-# get the events for the sample
-#eventsPath = "output/" + SAMPLE + "/events/summary.txt"
-#summary = pd.read_csv(eventsPath, sep='\t', lineterminator='\n', header = 0)
-#EVENTS = list(set(summary.event))
-
-#none = EVENTS.count('none')
-#if (none > 0):
-#    EVENTS = EVENTS.remove('none')
-
 ### -------------------------------------------------------------------
 ### Target rule
 ### -------------------------------------------------------------------
@@ -33,15 +24,16 @@ rule all:
 ### DMR Hotspots
 ### -------------------------------------------------------------------
 
-rule call_dmrs:
+rule cp_dmr:
     input:
-        hp1="output/{sample}/methylation/HP1_MethylFrequency.tsv",
-        hp2="output/{sample}/methylation/HP2_MethylFrequency.tsv"
+        dmr = lambda w: config["samples"][w.sample]["dmr"]
     output:
         "output/{sample}/methylation/diff_meth.csv"
-    threads: 30
     shell:
-        "scripts/call_dmrs_with_dss.R --methfile1 {input.hp1} --methfile2 {input.hp2} -o {output} -t {threads} -m 3"
+        """
+        cp {input.dmr} output/{wildcards.sample}/methylation/diff_meth.csv.gz
+        gunzip output/{wildcards.sample}/methylation/diff_meth.csv.gz
+        """
 
 rule hpv_int_dist_merge:
     input:
@@ -121,77 +113,3 @@ rule average_Cpg:
     shell:
         "python scripts/cpgIslandAverageR9.py {input.freq} {output}"
 
-#checkpoint make_individual_bed:
-#    input:
-#        "output/{sample}/events/hpv_integration_events_distance.bed"
-#    output:
-#        directory("output/{sample}/events/dist_events")
-#    shell:
-#        """
-#        mkdir {output}
-#        awk '{{filename = sprintf("hpv_dist_event%d.bed", NR); print >filename; close(filename)}}' {input}
-#        mv hpv_dist_event*.bed {output}
-#        """
-
-#rule int_dmr_hotspot:
-#    input:
-#        dmr="output/{sample}/methylation/dmr.sorted.bed",
-#        hpv="output/{sample}/events/dist_events/hpv_dist_event{i}.bed"
-#    output:
-#        "output/{sample}/methylation/dist_events/dmrIntersectHPV{i}.bed"
-#    shell:
-#        "bedtools closest -D ref -a {input.dmr} -b {input.hpv} > {output}" 
-
-#rule int_dmr_hotspot_combine:
-#    input:
-#        bed="output/{sample}/methylation/dist_events/dmrIntersectHPV{i}.bed"
-#    output:
-#        "output/{sample}/methylation/dmrIntersectHPV.bed"
-#    shell:
-#        "cat {input} > {output}" 
-
-#def aggregate_input1(wildcards):
-#    checkpoint_output = checkpoints.make_individual_bed.get(**wildcards).output[0]
-#    return expand('output/{sample}/methylation/dist_events/dmrIntersectHPV{i}.bed',
-#		sample=SAMPLE,
-#		i=glob_wildcards(os.path.join(checkpoint_output, 'hpv_dist_event{i}.bed')).i)
-
-#def aggregate_input2(wildcards):
-#    checkpoint_output = checkpoints.make_individual_bed.get(**wildcards).output[0]
-#    return expand('output/{sample}/methylation/dmrIntersectHPV.bed',
-#		sample=SAMPLE,
-#		i=glob_wildcards(os.path.join(checkpoint_output, 'hpv_dist_event{i}.bed')).i)
-
-#rule final1:
-#    input:
-#        aggregate_input1
-#    output:
-#        "output/{sample}/.combined/dist_combined1.txt"
-#    shell:
-#        "touch {output}"
-
-#rule final2:
-#    input:
-#        aggregate_input2
-#    output:
-#        "output/{sample}/.combined/dist_combined2.txt"
-#    shell:
-#        "touch {output}"
-
-#rule HP1_readnames:
-#    input:
-#        bed="output/{sample}/events/hpv_integration_events_distance.bed",
-#        bam="output/{sample}/bam/HP1_Converted2Bisulfite.sorted.bam"
-#    output:
-#        "output/{sample}/event_phase/{event}/HP1_readnames.txt"
-#    shell:
-#        "samtools view -L {input.bed} {input.bam} | cut -f1 | sort | uniq > {output}"
-
-#rule HP2_readnames:
-#    input:
-#        bed="output/{sample}/events/hpv_integration_events_distance.bed",
-#        bam="output/{sample}/bam/HP2_Converted2Bisulfite.sorted.bam"
-#    output:
-#        "output/{sample}/event_phase/{event}/HP2_readnames.txt"
-#    shell:
-#        "samtools view -L {input.bed} {input.bam} | cut -f1 | sort | uniq > {output}"

@@ -116,44 +116,8 @@ rule compare_HP:
         "output/{sample}/event_phase/{event}/event_haplotype.txt"
     shell:
         """
-        /projects/vporter_prj/tools/miniconda3/envs/hpv_integration_events/bin/python scripts/countHPfromBAM.py {input.bam} > {output}
+        python scripts/countHPfromBAM.py {input.bam} > {output}
         """
-
-#rule HP1_readnames:
-#    input:
-#        bam="output/{sample}/bam/HP1_Converted2Bisulfite.sorted.bam",
-#        txt="output/{sample}/event_phase/{event}/hpv_read_names.txt"
-#    output:
-#        "output/{sample}/event_phase/{event}/HP1_hpv_readnames.txt"
-#    shell:
-#        "picard FilterSamReads --INPUT {input.bam} --OUTPUT /dev/stdout --QUIET true --READ_LIST_FILE {input.txt} --FILTER includeReadList --VALIDATION_STRINGENCY SILENT | samtools view | cut -f1 | sort | uniq > {output}"
-
-#rule HP2_readnames:
-#    input:
-#        bam="output/{sample}/bam/HP2_Converted2Bisulfite.sorted.bam",
-#        txt="output/{sample}/event_phase/{event}/hpv_read_names.txt"
-#    output:
-#        "output/{sample}/event_phase/{event}/HP2_hpv_readnames.txt"
-#    shell:
-#        "picard FilterSamReads --INPUT {input.bam} --OUTPUT /dev/stdout --QUIET true --READ_LIST_FILE {input.txt} --FILTER includeReadList --VALIDATION_STRINGENCY SILENT | samtools view | cut -f1 | sort | uniq > {output}"
-
-#rule compare_HP:
-#    input:
-#        hp1 = "output/{sample}/event_phase/{event}/HP1_hpv_readnames.txt",
-#        hp2 = "output/{sample}/event_phase/{event}/HP2_hpv_readnames.txt"
-#    output:
-#        "output/{sample}/event_phase/{event}/event_haplotype.txt"
- #   run:
-#        with open(input.hp1) as f:
-#            n1 = f.readlines()
-#        with open(input.hp2) as f:
-#            n2 = f.readlines()
-#        if (len(n1) > len(n2)):
-#            with open(output[0], 'w') as f:
-#                f.write('HP1')
-#        else:
-#            with open(output[0], 'w') as f:
-#                f.write('HP2')
 
 rule intersect_phaseblock:
     input:
@@ -225,7 +189,7 @@ rule permute_test_upstream:
     threads: 15
     shell:
         """
-        /projects/vporter_prj/tools/miniconda3/envs/hpv_integration_events/bin/python3.6 scripts/permutateDMRHotspots.py -d sample_txtfiles/dmr_file_locations.txt -b {input.df} -s {wildcards.sample} -t {threads} -o output/{wildcards.sample}/event_phase/{wildcards.event}/dmr_permute_500kbup
+        python3.6 scripts/permutateDMRHotspots.py -d sample_txtfiles/dmr_file_locations.txt -b {input.df} -s {wildcards.sample} -t {threads} -o output/{wildcards.sample}/event_phase/{wildcards.event}/dmr_permute_500kbup
         """
 
 rule permute_test_downstream:
@@ -236,7 +200,7 @@ rule permute_test_downstream:
     threads: 15
     shell:
         """
-        /projects/vporter_prj/tools/miniconda3/envs/hpv_integration_events/bin/python3.6 scripts/permutateDMRHotspots.py -d sample_txtfiles/dmr_file_locations.txt -b {input.df} -s {wildcards.sample} -t {threads} -o output/{wildcards.sample}/event_phase/{wildcards.event}/dmr_permute_500kbdown
+        python3.6 scripts/permutateDMRHotspots.py -d sample_txtfiles/dmr_file_locations.txt -b {input.df} -s {wildcards.sample} -t {threads} -o output/{wildcards.sample}/event_phase/{wildcards.event}/dmr_permute_500kbdown
         """
 
 rule permute_test_1Mb:
@@ -247,7 +211,7 @@ rule permute_test_1Mb:
     threads: 15
     shell:
         """
-        /projects/vporter_prj/tools/miniconda3/envs/hpv_integration_events/bin/python3.6 scripts/permutateDMRHotspots.py -d sample_txtfiles/dmr_file_locations.txt -b {input.df} -s {wildcards.sample} -t {threads} -o output/{wildcards.sample}/event_phase/{wildcards.event}/dmr_permute_1Mb
+        python3.6 scripts/permutateDMRHotspots.py -d sample_txtfiles/dmr_file_locations.txt -b {input.df} -s {wildcards.sample} -t {threads} -o output/{wildcards.sample}/event_phase/{wildcards.event}/dmr_permute_1Mb
         """
 
 rule pvalue_upstream:

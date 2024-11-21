@@ -27,7 +27,7 @@ parser = parser.parse_args()
 
 # make the inputs bedtools objects
 hs = BedTool(parser.region)
-genome = '/projects/hpv_nanopore_prj/refs/hg38_chromsizes_autosomes.txt'
+genome = 'tables/hg38_chromsizes_autosomes.txt'
 
 # read in the file locations for all the DMR locations
 with open(parser.dmr_paths) as f:

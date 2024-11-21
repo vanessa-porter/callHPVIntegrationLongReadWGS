@@ -29,8 +29,6 @@ bed_df = pd.read_csv(bed_file, sep='\t', header=None, names=['chrom', 'start', '
 fasta_file = parser.fasta
 reference_genome = SeqIO.to_dict(SeqIO.parse(fasta_file, "fasta"))
 
-print("Files processed")
-
 # Expand each region to 1 Mb around the center
 def expand_region(row, total_size=window_size):
     chrom, start, end = row['chrom'], row['start'], row['end']
@@ -48,7 +46,6 @@ print("Bed file expanded to window size")
 def get_sequence(chrom, start, end):
     if chrom in reference_genome:
         chrom_length = len(reference_genome[chrom])
-        # Ensure the end does not exceed chromosome length
         end = min(end, chrom_length)
         return reference_genome[chrom].seq[start:end]
     else:
@@ -59,12 +56,12 @@ def calculate_gc_content_for_region(row):
     chrom, start, end = row['chrom'], row['start'], row['end']
     sequence = get_sequence(chrom, start, end)
     if sequence:
-        gc_content = gc_fraction(sequence) * 100  # convert to percentage
+        gc_content = gc_fraction(sequence) * 100  
         return gc_content
     else:
         return None
 
-# Function to calculate GC content for all regions in parallel
+# Function to run in parallel
 def calculate_gc_content_for_regions_parallel(bed_df, max_workers=num_threads):
     gc_contents = [None] * len(bed_df)
     
@@ -81,13 +78,9 @@ def calculate_gc_content_for_regions_parallel(bed_df, max_workers=num_threads):
 
     return gc_contents
 
-print("Functions made. Running function ...")
-
-# Calculate GC content for each expanded region specified in the BED file in parallel
+# Run
 expanded_bed_df['gc_content'] = calculate_gc_content_for_regions_parallel(expanded_bed_df)
 
-# Save the results to a new file
+# Save 
 output_file = parser.out
 expanded_bed_df.to_csv(output_file, sep='\t', index=False, header=False)
-
-print("GC content calculation for specified regions completed. Results saved to:", output_file)

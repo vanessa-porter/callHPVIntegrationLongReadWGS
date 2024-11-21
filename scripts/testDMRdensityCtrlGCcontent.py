@@ -28,11 +28,11 @@ parser = parser.parse_args()
 ##### GET THE DMR DENSITY IN THE HPV EXPANDED POSITIONS 
 ##### ---------------------------------------------------------------------
 # input objects
-genome = '/projects/hpv_nanopore_prj/refs/hg38_chromsizes_autosomes.txt'
+genome = 'tables/hg38_chromsizes_autosomes.txt'
 window = parser.window
 half = int(window/2)
 
-# read in the file locations for all the DMR locations
+# read in the file locations for all the DMRs
 with open(parser.dmr_paths) as f:
     reader = csv.reader(f, delimiter="\t")
     allDMRFiles = list(reader)
@@ -80,7 +80,6 @@ for s in intSamples:
         start = region.start
         end = region.end
         region_name = f'{chrom}:{start}-{end}'
-        # Intersect DMRs with the current expanded region
         sub = bDMR.intersect(r, wa=True)
         # Calculate the sum of lengths of intersected DMRs
         dmr_lengths = sum(i.end - i.start for i in sub)
@@ -109,21 +108,20 @@ HPVdf_XRm = HPVdf[~HPVdf['region'].str.contains('chrX')]
 ##### -----------------------------------------------------------------------------
 ##### CHOOSE 10,000 RANDOM POSITIONS THAT CREATE THE SAME GC CONTENT DISTRIBUTION
 ##### -----------------------------------------------------------------------------
+
 # Load the precomputed regions with GC content
 precomputed_file = parser.ctrl
 precomputed_df = pd.read_csv(precomputed_file, sep='\t', header=None, names=['chrom', 'start', 'end', 'gc_content'])
 
-# Load the expanded regions with GC content
+# Load the test regions with GC content
 expanded_regions_file = parser.test
 expanded_regions_df = pd.read_csv(expanded_regions_file, sep='\t', header=None, names=['chrom', 'start', 'end', 'gc_content'])
 
 # add the GC content to the HPV regions
-expanded_regions_df['region'] = expanded_regions_df.apply(
-    lambda row: f"{row['chrom']}:{row['start']}-{row['end']}", axis=1
-)
+expanded_regions_df['region'] = expanded_regions_df.apply(lambda row: f"{row['chrom']}:{row['start']}-{row['end']}", axis=1)
 HPVdf_merge = pd.merge(HPVdf_XRm, expanded_regions_df[['region', 'gc_content']], on='region', how='left')
 
-# Function to create a GC content distribution histogram
+# Function to calculate GC content distribution 
 def create_gc_content_histogram(gc_content, bins=500):
     hist, bin_edges = np.histogram(gc_content, bins=bins, range=(0, 100), density=True)
     return hist, bin_edges
@@ -136,7 +134,7 @@ def calculate_similarity(hist1, hist2):
     from scipy.stats import ks_2samp
     return ks_2samp(hist1, hist2).statistic
 
-# Function to sample random regions to match GC content distribution
+# Function to select random regions to match GC content distribution of the test HPV regions
 def sample_matching_gc_content_regions(sliding_windows_df, target_hist, bin_edges, sample_size=10000, max_iterations=1000):
     sliding_windows_df = sliding_windows_df[sliding_windows_df['gc_content'] > 0]
     best_sample = None
@@ -150,14 +148,14 @@ def sample_matching_gc_content_regions(sliding_windows_df, target_hist, bin_edge
             best_sample = sample
     return best_sample
 
-# Sample random regions to match GC content distribution of the expanded regions
+# Sample random regions to match GC content distribution of the HPV integrated regions
 matched_ctrl_df = sample_matching_gc_content_regions(precomputed_df, expanded_hist, expanded_bin_edges, sample_size=10000)
 
 ##### -----------------------------------------------------------------------------
-##### CALCULATE THE DMR DENSITY AT THE CONTROL REGIONS (CHOOSING A RANDOM SAMPLE)
+##### CALCULATE THE DMR DENSITY AT THE CONTROL REGIONS 
 ##### -----------------------------------------------------------------------------
 
-# Function to calculate DMR density for a single region
+# Function to calculate DMR density for a single region (i.e. control region)
 def calculate_dmr_density_for_region(row, all_dmr_files):
     sample = random.choice(allSamples)
     chrom, start, end = row['chrom'], row['start'], row['end']
@@ -204,7 +202,7 @@ dmr_densities_merge = pd.merge(dmr_densities_df, precomputed_df[['region', 'gc_c
 density_test = HPVdf_XRm['density']
 density_ctrl = dmr_densities_merge['density']
 
-# Wilcox test
+# pvalue
 stat, p_value = mannwhitneyu(density_test, density_ctrl, alternative='two-sided')
 
 # save the dataframes

@@ -1,6 +1,12 @@
-#!/gsc/software/linux-x86_64-centos7/R-4.0.2/bin/Rscript --vanilla
+#!/usr/bin/env Rscript
 
-#Note: these packages need to be installed.
+# install packages
+list.of.packages <- c("optparse", "reshape2", "ggplot2", "tidyr", "stringr","dplyr","pafr", "bedtoolsr")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
+# load packages
+library(optparse)
 suppressMessages(library(optparse))
 suppressMessages(library(reshape2))
 suppressMessages(library(ggplot2))
@@ -9,7 +15,7 @@ suppressMessages(library(stringr))
 suppressMessages(library(dplyr))
 suppressMessages(library(pafr))
 suppressMessages(library(bedtoolsr))
-options(bedtools.path = "/gsc/software/linux-x86_64-centos7/bedtools-2.27.1/bin")
+options(bedtools.path = "/path/to/bedtools-2.27.1/bin")
 
 # Make help options
 option_list = list(

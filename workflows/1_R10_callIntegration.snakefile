@@ -5,6 +5,9 @@ SAMPLE = os.environ.get("SAMPLE")
 configfile: "config/samples.yaml"
 configfile: "config/parameters.yaml"
 
+# path to the reference genome fasta
+genome_path = config["GENOME_MMI"]
+
 ### -------------------------------------------------------------------
 ### Target rule
 ### -------------------------------------------------------------------
@@ -56,7 +59,8 @@ rule index_HPV_reads:
 rule HPV_fasta:
     input:
         bai="output/{sample}/bam/hpv_reads.bam.bai",
-        bam="output/{sample}/bam/hpv_reads.bam"
+        bam="output/{sample}/bam/hpv_reads.bam",
+        genome=genome_path
     output:
         "output/{sample}/bam/hpv_reads.fasta"
     shell:
@@ -68,7 +72,7 @@ rule HPV_paf_reads:
     output:
         "output/{sample}/bam/hpv_reads.paf"
     shell:
-        "minimap2 -cx map-ont /projects/alignment_references/9606/hg38_no_alt_TCGA_HTMCP_HPVs/genome/minimap2-2.15-map-ont/hg38_no_alt_TCGA_HTMCP_HPVs_map-ont.mmi {input.fasta} > {output}"
+        "minimap2 -cx map-ont {input.genome} {input.fasta} > {output}"
 
 ### -------------------------------------------------------------------
 ### extract methylation from reads (new chemistry)
@@ -211,11 +215,12 @@ rule flye:
 
 rule map_asm_ref_paf:
     input:
-        "output/{sample}/asm/event{i}/assembly.fasta"
+        fasta="output/{sample}/asm/event{i}/assembly.fasta",
+        genome=genome_path
     output:
         "output/{sample}/asm/event{i}/assembly.hybrid.paf"
     shell:
-        "minimap2 -x asm5 /projects/alignment_references/9606/hg38_no_alt_TCGA_HTMCP_HPVs/genome/minimap2-2.15-map-ont/hg38_no_alt_TCGA_HTMCP_HPVs_map-ont.mmi {input} > {output}"
+        "minimap2 -x asm5 {input.genome} {input.fasta} > {output}"
 
 rule map_reads_asm_paf:
     input:
@@ -263,32 +268,6 @@ rule asm_sniffles:
     threads: 5
     shell:
         "sniffles --threads {threads} --max_distance 50 --max_num_splits -1 --report_BND --num_reads_report -1 --min_support 3 --min_seq_size 500 -m {input.bam} -v {output}"
-
-### -------------------------------------------------------------------
-### RepeatMaster
-### -------------------------------------------------------------------
-
-#rule repeat_master:
-#    input:
-#        fasta="output/{sample}/events/event{i}.fasta"
-#    output:
-#        "output/{sample}/intType/event{i}/.scratch/reads.fasta.out.gff"
-#    threads: 20
-#    shell:
-#        "singularity exec -B /projects,/home /projects/vporter_prj/tools/repeatmasker_4.1.2.p1--pl5321hdfd78af_1.sif RepeatMasker {input.fasta} -pa {threads} -gff -species human"
-
-### -------------------------------------------------------------------
-### get regions before and after integration sites
-### -------------------------------------------------------------------
-
-#rule split_summary:
-#    input:
-#        summary = "output/{sample}/events/summary.txt"
-#    output:
-#        "output/{sample}/intTypeTest/event{i}/.scratch/event_summary.txt"
-#    shell:
-#        "grep {wildcards.event} {input.summary} > {output}"
-
 
 ### -------------------------------------------------------------------
 ### Aggregate the final inputs to define the wildcards

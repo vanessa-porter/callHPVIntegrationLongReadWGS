@@ -1,6 +1,11 @@
-#!/gsc/software/linux-x86_64-centos7/R-4.0.2/bin/Rscript --vanilla
+#!/usr/bin/env Rscript
 
-#Note: these packages need to be installed.
+# install packages
+list.of.packages <- c("optparse", "ggplot2", "dplyr")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
+# load packages
 suppressMessages(library(optparse))
 suppressMessages(library(dplyr))
 suppressMessages(library(ggplot2))

@@ -10,7 +10,7 @@ events = [f for f in os.listdir(intPath) if not f.startswith('.')]
 eventsPath = [intPath + s for s in events]
 
 # genes
-gene_gff = "/gsc/resources/annotation/snpeff/snpeff_binaries/5.0/data/GRCh38.100/genes.gtf"
+gene_gff = config["GENES_PATH"]
 
 # two-break events
 tbe = []

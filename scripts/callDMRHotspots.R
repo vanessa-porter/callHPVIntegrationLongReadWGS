@@ -1,8 +1,14 @@
-#!/gsc/software/linux-x86_64-centos7/R-4.0.2/bin/Rscript --vanilla
+#!/usr/bin/env Rscript
 
 ### ----------------------------------------------------------
 ### OptParse Options
 ### ----------------------------------------------------------
+# install packages
+list.of.packages <- c("optparse")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
+# load packages
 library(optparse)
 
 option_list = list(

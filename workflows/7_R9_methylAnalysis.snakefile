@@ -98,7 +98,7 @@ rule get_readnames:
 
 rule HP1_readnames:
     input:
-        bam="output/{sample}/bam/HP1_Converted2Bisulfite.sorted.bam",
+        bam=lambda w: config["samples"][w.sample]["HP1"],
         txt="output/{sample}/event_phase/{event}/hpv_read_names.txt"
     output:
         "output/{sample}/event_phase/{event}/HP1_hpv_readnames.txt"
@@ -107,7 +107,7 @@ rule HP1_readnames:
 
 rule HP2_readnames:
     input:
-        bam="output/{sample}/bam/HP2_Converted2Bisulfite.sorted.bam",
+        bam=lambda w: config["samples"][w.sample]["HP2"],,
         txt="output/{sample}/event_phase/{event}/hpv_read_names.txt"
     output:
         "output/{sample}/event_phase/{event}/HP2_hpv_readnames.txt"
@@ -202,7 +202,7 @@ rule permute_test_upstream:
     threads: 25
     shell:
         """
-        /projects/vporter_prj/tools/miniconda3/envs/hpv_integration_events/bin/python3.6 scripts/permutateDMRHotspots.py -d sample_txtfiles/dmr_file_locations.txt -b {input.df} -s {wildcards.sample} -t {threads} -o output/{wildcards.sample}/event_phase/{wildcards.event}/dmr_permute_500kbup
+        python3.6 scripts/permutateDMRHotspots.py -d sample_txtfiles/dmr_file_locations.txt -b {input.df} -s {wildcards.sample} -t {threads} -o output/{wildcards.sample}/event_phase/{wildcards.event}/dmr_permute_500kbup
         """
 
 rule permute_test_downstream:
@@ -213,7 +213,7 @@ rule permute_test_downstream:
     threads: 25
     shell:
         """
-        /projects/vporter_prj/tools/miniconda3/envs/hpv_integration_events/bin/python3.6 scripts/permutateDMRHotspots.py -d sample_txtfiles/dmr_file_locations.txt -b {input.df} -s {wildcards.sample} -t {threads} -o output/{wildcards.sample}/event_phase/{wildcards.event}/dmr_permute_500kbdown
+        python3.6 scripts/permutateDMRHotspots.py -d sample_txtfiles/dmr_file_locations.txt -b {input.df} -s {wildcards.sample} -t {threads} -o output/{wildcards.sample}/event_phase/{wildcards.event}/dmr_permute_500kbdown
         """
 
 rule permute_test_1Mb:
@@ -224,7 +224,7 @@ rule permute_test_1Mb:
     threads: 15
     shell:
         """
-        /projects/vporter_prj/tools/miniconda3/envs/hpv_integration_events/bin/python3.6 scripts/permutateDMRHotspots.py -d sample_txtfiles/dmr_file_locations.txt -b {input.df} -s {wildcards.sample} -t {threads} -o output/{wildcards.sample}/event_phase/{wildcards.event}/dmr_permute_1Mb
+        python3.6 scripts/permutateDMRHotspots.py -d sample_txtfiles/dmr_file_locations.txt -b {input.df} -s {wildcards.sample} -t {threads} -o output/{wildcards.sample}/event_phase/{wildcards.event}/dmr_permute_1Mb
         """
 
 rule pvalue_upstream:

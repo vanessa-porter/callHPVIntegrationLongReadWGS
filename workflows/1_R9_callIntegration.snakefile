@@ -5,6 +5,9 @@ SAMPLE = os.environ.get("SAMPLE")
 configfile: "config/samples.yaml"
 configfile: "config/parameters.yaml"
 
+# path to the reference genome fasta mmi
+genome_path = config["GENOME_MMI"]
+
 ### -------------------------------------------------------------------
 ### Target rule
 ### -------------------------------------------------------------------
@@ -54,7 +57,7 @@ rule index_HPV_reads:
 rule filter_HPV_methyl_reads:
     input:
         names="output/{sample}/bam/hpv_read_names.txt",
-        bam="output/{sample}/bam/methyl_reads.sorted.bam"
+        bam=lambda w: config["samples"][w.sample]["methyl_bam"]
     output:
         "output/{sample}/bam/methyl_hpv_reads.bam"
     shell:
@@ -83,11 +86,12 @@ rule HPV_fasta:
 
 rule HPV_paf_reads:
     input:
-        fasta="output/{sample}/bam/hpv_reads.fasta"
+        fasta="output/{sample}/bam/hpv_reads.fasta",
+        genome=genome_path
     output:
         "output/{sample}/bam/hpv_reads.paf"
     shell:
-        "minimap2 -cx map-ont /projects/alignment_references/9606/hg38_no_alt_TCGA_HTMCP_HPVs/genome/minimap2-2.15-map-ont/hg38_no_alt_TCGA_HTMCP_HPVs_map-ont.mmi {input.fasta} > {output}"
+        "minimap2 -cx map-ont {input.genome} {input.fasta} > {output}"
 
 
 ### -------------------------------------------------------------------
@@ -97,7 +101,7 @@ rule HPV_paf_reads:
 rule methyl_hpv_reads:
     input:
         names="output/{sample}/bam/hpv_read_names.txt",
-        tsv="output/{sample}/methylation/methylation.tsv"
+        tsv=lambda w: config["samples"][w.sample]["methyl"]
     output:
         "output/{sample}/methylation/hpv_reads_methylation.tsv"
     shell:
@@ -105,7 +109,7 @@ rule methyl_hpv_reads:
 
 rule methyl_freq_hpv:
     input:
-        tsv="output/{sample}/methylation/methylation_frequency.tsv"
+        tsv=lambda w: config["samples"][w.sample]["methyl_freq"]
     output:
         "output/{sample}/methylation/hpv_methylation_frequency.tsv"
     shell:
@@ -225,11 +229,12 @@ rule flye:
 
 rule map_asm_ref_paf:
     input:
-        "output/{sample}/asm/event{i}/assembly.fasta"
+        fasta="output/{sample}/asm/event{i}/assembly.fasta",
+        genome=genome_path
     output:
         "output/{sample}/asm/event{i}/assembly.hybrid.paf"
     shell:
-        "minimap2 -x asm5 /projects/alignment_references/9606/hg38_no_alt_TCGA_HTMCP_HPVs/genome/minimap2-2.15-map-ont/hg38_no_alt_TCGA_HTMCP_HPVs_map-ont.mmi {input} > {output}"
+        "minimap2 -x asm5 {input.genome} {input.fasta} > {output}"
 
 rule map_reads_asm_paf:
     input:
