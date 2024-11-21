@@ -152,7 +152,6 @@ rule event_bams:
     output:
         "output/{sample}/events/event{i}.bam"
     conda: "config/conda.yaml"
-    log: "output/{sample}/log/event{i}/event_bams.log"
     shell:
         "picard FilterSamReads -I {input.bam} -O {output} -READ_LIST_FILE {input.names} -FILTER includeReadList -VALIDATION_STRINGENCY SILENT"
 
@@ -162,7 +161,6 @@ rule event_bams_sort:
     output:
         "output/{sample}/events/event{i}.sorted.bam"
     conda: "config/conda.yaml"
-    log: "output/{sample}/log/event{i}/event_bams_sort.log"
     shell:
         "sambamba sort {input.bam} > {output}"
 
@@ -172,7 +170,6 @@ rule event_fastq:
     output:
         "output/{sample}/events/event{i}.fastq"
     conda: "config/conda.yaml"
-    log: "output/{sample}/log/event{i}/event_fastq.log"
     shell:
         "samtools fastq {input.bam} > {output}"
 
@@ -182,7 +179,6 @@ rule event_fasta:
     output:
         "output/{sample}/events/event{i}.fasta"
     conda: "config/conda.yaml"
-    log: "output/{sample}/log/event{i}/event_fasta.log"
     shell:
         "samtools fasta {input.bam} > {output}"
 
@@ -192,7 +188,6 @@ rule event_depth:
     output:
         "output/{sample}/depth/event{i}_depth.txt"
     conda: "config/conda.yaml"
-    log: "output/{sample}/log/event{i}/event_depth.log"
     shell:
         "samtools depth {input.bam} > {output}"
 
@@ -203,7 +198,6 @@ rule site_bams:
     output:
         "output/{sample}/events/hpv.site{i}.bam"
     conda: "config/conda.yaml"
-    log: "output/{sample}/log/event{i}/site_bams.log"
     shell:
         "picard FilterSamReads -I {input.bam} -O {output} -READ_LIST_FILE {input.names} -FILTER includeReadList -VALIDATION_STRINGENCY SILENT"
 
@@ -213,7 +207,6 @@ rule site_bams_sort:
     output:
         "output/{sample}/events/hpv.site{i}.sorted.bam"
     conda: "config/conda.yaml"
-    log: "output/{sample}/log/event{i}/site_bams_sort.log"
     shell:
         "sambamba sort {input.bam} > {output}"
 
@@ -223,7 +216,6 @@ rule site_depth:
     output:
         "output/{sample}/depth/hpv.site{i}_depth.txt"
     conda: "config/conda.yaml"
-    log: "output/{sample}/log/event{i}/site_depth.log"
     shell:
         "samtools depth {input.bam} > {output}"
 
@@ -239,7 +231,6 @@ rule flye:
         "output/{sample}/asm/event{i}/assembly.fasta"
     conda: "config/conda.yaml"
     threads: 10
-    log: "output/{sample}/log/event{i}/flye.log"
     shell:
         "flye --nano-raw {input.fastq} -i 3 -t {threads} -o output/{wildcards.sample}/asm/event{wildcards.i}"
 
@@ -254,7 +245,6 @@ rule map_asm_ref_paf:
     output:
         "output/{sample}/asm/event{i}/assembly.hybrid.paf"
     conda: "config/conda.yaml"
-    log: "output/{sample}/log/event{i}/map_asm_ref_paf.log"
     shell:
         "minimap2 -x asm5 {input.genome} {input.fasta} > {output}"
 
@@ -265,7 +255,6 @@ rule map_reads_asm_paf:
     output:
         "output/{sample}/asm/event{i}/reads.asm.paf"
     conda: "config/conda.yaml"
-    log: "output/{sample}/log/event{i}/map_reads_asm_paf.log"
     shell:
         "minimap2 -L --MD -Y -x map-ont {input.asm} {input.reads} > {output}"
 
@@ -280,7 +269,6 @@ rule map_reads_asm_sam:
     output:
         "output/{sample}/asm/event{i}/reads.asm.sam"
     conda: "config/conda.yaml"
-    log: "output/{sample}/log/map_reads_asm_sam.log"
     shell:
         "minimap2 -L --MD -Y -ax map-ont {input.asm} {input.reads} > {output}"
 
@@ -290,7 +278,6 @@ rule view_reads_asm:
     output:
         "output/{sample}/asm/event{i}/reads.asm.bam"
     conda: "config/conda.yaml"
-    log: "output/{sample}/log/event{i}/view_reads_asm.log"
     shell:
         "samtools view -S -b {input.sam} > {output}"
 
@@ -300,7 +287,6 @@ rule sort_reads_asm:
     output:
         "output/{sample}/asm/event{i}/reads.asm.sorted.bam"
     conda: "config/conda.yaml"
-    log: "output/{sample}/log/event{i}/sort_reads_asm.log"
     shell:
         "sambamba sort {input.bam}"
 
@@ -311,7 +297,6 @@ rule asm_sniffles:
         "output/{sample}/asm/event{i}/sniffles_asm.vcf"
     conda: "config/conda.yaml"
     threads: 5
-    log: "output/{sample}/log/event{i}/asm_sniffles.log"
     shell:
         "sniffles --threads {threads} --max_distance 50 --max_num_splits -1 --report_BND --num_reads_report -1 --min_support 3 --min_seq_size 500 -m {input.bam} -v {output}"
 

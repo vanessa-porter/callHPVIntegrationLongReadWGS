@@ -15,7 +15,17 @@ suppressMessages(library(stringr))
 suppressMessages(library(dplyr))
 suppressMessages(library(pafr))
 suppressMessages(library(bedtoolsr))
-options(bedtools.path = "/path/to/bedtools-2.27.1/bin")
+
+# Get the path to the Conda environment
+conda_prefix <- Sys.getenv("CONDA_PREFIX")
+
+if (conda_prefix != "") {
+  # Assume bedtools is installed under bin within the conda environment
+  bedtools_path <- file.path(conda_prefix, "bin")
+  options(bedtools.path = bedtools_path)
+} else {
+  stop("CONDA_PREFIX environment variable is not set. Please activate your conda environment.")
+}
 
 # Make help options
 option_list = list(
