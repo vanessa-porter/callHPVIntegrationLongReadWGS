@@ -40,6 +40,8 @@ rule int_depth:
         bed = "output/{sample}/intType/{event}/twoBreak.bed"
     output:
         "output/{sample}/intType/{event}/twoBreakDepth.bed"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/int_depth.log"
     shell:
         "samtools depth -a -b {input.bed} {input.bam} > {output}"
 
@@ -52,6 +54,8 @@ rule event_bed:
         "output/{sample}/intType/{event}/event_summary.txt"
     output: 
         "output/{sample}/intType/{event}/{event}_region.bed"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/int_depth.log"
     run:
         df = pd.read_csv(input[0], sep='\t', lineterminator='\n', names = ["chr","pos","HPVchr","HPVpos","HPV.site","event","VAF","read.depth"])
         out = {'chr': [df["chr"][0]], 'start': [min(df["pos"])], 'end': [max(df["pos"])]}
@@ -64,6 +68,8 @@ rule genic:
         genes = gene_gff
     output: 
         "output/{sample}/intType/{event}/genic_test/genic.bed"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/genic.log"
     shell:
         "bedtools intersect -wa -f 0.9 -a {input.region} -b {input.genes} | sort | uniq > {output}"
 
@@ -73,6 +79,8 @@ rule partial_genic:
         genes = gene_gff
     output: 
         "output/{sample}/intType/{event}/genic_test/partial_genic.bed"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/partial_genic.log"
     shell:
         "bedtools intersect -wa -f 0.1 -a {input.region} -b {input.genes} | sort | uniq > {output}"
 
@@ -82,6 +90,8 @@ rule genic_test:
         part_genic = "output/{sample}/intType/{event}/genic_test/partial_genic.bed"
     output: 
         "output/{sample}/intType/{event}/genic_test/event_location.txt"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/genic_test.log"
     run:
         t1 = os.stat(input.genic).st_size == 0
         t2 = os.stat(input.part_genic).st_size == 0
@@ -106,6 +116,8 @@ rule intTest2:
         "output/{sample}/intType/{event}/twoBreakDepth.bed"
     output:
         "output/{sample}/intType/{event}/intTest2.txt"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/intTest2.log"
     shell:
         "DEPTH={input} python scripts/intTypeTestTwoBreak.py > {output}"
 
@@ -118,6 +130,8 @@ rule regionize_event:
         "output/{sample}/intType/{event}/{event}_region.bed"
     output:
         "output/{sample}/intType/{event}/{event}_regions_updown.bed"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/regionize_event.log"
     run:
         df = pd.read_csv(input[0], sep='\t', lineterminator='\n', names = ["chr","start","end"])
         start = df["start"][0]
@@ -136,6 +150,8 @@ rule methyl_bed:
         methyl = "output/{sample}/methylation/event_methyl_freq.tsv"
     output:
         "output/{sample}/methylation/event_methyl_freq.bed"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/methyl_bed.log"
     shell:
         """
         cat {input.methyl} | tail -n +2 | awk '{{print $1"\t"$2"\t"$2+1"\t"$3"\t"$4"\t"$5"\t"$6"\t"$7}}' > {output}
@@ -147,6 +163,8 @@ rule methyl_freq_updown:
         methyl = "output/{sample}/methylation/event_methyl_freq.bed"
     output:
         "output/{sample}/methylation/regions/{event}/methylregions.bed"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/methyl_freq_updown.log"
     shell:
         """
         bedtools intersect -wb -a {input.methyl} -b {input.regions} > {output}

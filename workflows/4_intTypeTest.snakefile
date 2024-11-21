@@ -35,6 +35,8 @@ rule asm_bam:
     output:
         "output/{sample}/intType/{event}/assembly.hybrid.bam"
     threads: 50
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/asm_bam.log"
     shell:
         "minimap2 -x map-ont -a -t {threads} {input.ref} {input.fasta} | samtools view -b - > {output}"
 
@@ -43,6 +45,8 @@ rule asm_bed:
         bam = "output/{sample}/intType/{event}/assembly.hybrid.bam"
     output:
         "output/{sample}/intType/{event}/assembly.hybrid.bed"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/asm_bed.log"
     shell:
         "bedtools bamtobed -i {input.bam} > {output}"
 
@@ -51,6 +55,8 @@ rule read_bed:
         bam = "output/{sample}/events/{event}.sorted.bam"
     output:
         "output/{sample}/intType/{event}/read.hybrid.bed"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/read_bed.log"
     shell:
         "bedtools bamtobed -i {input.bam} > {output}"
 
@@ -63,6 +69,8 @@ rule filter_asm_bed:
         bed = "output/{sample}/intType/{event}/assembly.hybrid.bed"
     output:
         "output/{sample}/intType/{event}/assembly.hybrid.filt.bed"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/filter_asm_bed.log"
     shell:
         "grep 'chr' {input.bed} > {output}"
     
@@ -71,6 +79,8 @@ rule uniq_chr:
         "output/{sample}/intType/{event}/assembly.hybrid.filt.bed"
     output:
         "output/{sample}/intType/{event}/chr.txt"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/uniq_chr.log"
     shell:
         "awk '{{print $1}}' {input} | sort | uniq > {output}"
 
@@ -80,6 +90,8 @@ rule filter_read_bed:
         chrs = "output/{sample}/intType/{event}/chr.txt"
     output:
         "output/{sample}/intType/{event}/read.hybrid.filt.bed"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/filter_read_bed.log"
     shell:
         "grep -F -f {input.chrs} {input.reads} > {output}"
 
@@ -93,6 +105,8 @@ rule bed_subtract:
         asm = "output/{sample}/intType/{event}/assembly.hybrid.filt.bed"
     output:
         "output/{sample}/intType/{event}/reads_sub_asm.bed"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/bed_subtract.log"
     shell:
         "bedtools subtract -a {input.reads} -b {input.asm} > {output}"
 
@@ -106,6 +120,8 @@ rule asm_depth:
         bed = "output/{sample}/intType/{event}/assembly.hybrid.filt.bed"
     output:
         "output/{sample}/intType/{event}/reads_cov_asm.bed"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/asm_depth.log"
     shell:
         "samtools depth -a -b {input.bed} {input.bam} > {output}"
 
@@ -121,6 +137,8 @@ rule intTypeTest:
         asm = "output/{sample}/intType/{event}/assembly.hybrid.filt.bed"
     output:
         "output/{sample}/intType/{event}/intTest3.txt"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/intTypeTest.log"
     shell:
         "SUB={input.sub} INFO={input.info} DEPTH={input.depth} ASM={input.asm} python scripts/ecDNA.py > {output}"
 

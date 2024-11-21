@@ -27,5 +27,7 @@ rule final:
         directory("output/{sample}/intType/{event}")
     output:
         "output/{sample}/intType/{event}/integration_type.txt"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/final.log"
     shell:
         "DIR={input} python scripts/final.py > {output}"

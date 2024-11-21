@@ -33,6 +33,8 @@ rule event_fasta:
         bam="output/{sample}/events/{event}.sorted.bam"
     output:
         "output/{sample}/intType/{event}/reads.fasta"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/event_fasta.log"
     shell:
         "samtools fasta {input.bam} > {output}"
 
@@ -41,6 +43,8 @@ rule repeat_master:
         fasta="output/{sample}/intType/{event}/reads.fasta"
     output:
         "output/{sample}/intType/{event}/reads.fasta.out.gff"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/repeat_master.log"
     threads: 20
     shell:
         "singularity exec -B /projects,/home RepeatMasker {input.fasta} -pa {threads} -gff -species human"
@@ -54,6 +58,8 @@ rule hpv_methyl_freq:
         tsv="output/{sample}/methylation/hpv_reads_methylation.tsv"
     output:
         "output/{sample}/methylation/event_methyl_freq.tsv"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/hpv_methyl_freq.log"
     shell: 
         "scripts/eventMethylationNewChemistry.R -m {input.tsv} -d output/{wildcards.sample}/events -o {output}"
 
@@ -67,6 +73,8 @@ rule hpv_integrant_size:
         summary="output/{sample}/events/summary.txt"
     output:
         "output/{sample}/hpv_size/hpvSizeCategories.txt"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/hpv_integrant_size.log"
     shell: 
         "scripts/hpv_integrant_size.R -p {input.paf} -s {input.summary} -o output/{wildcards.sample}/hpv_size"
 
@@ -82,6 +90,7 @@ rule subset_vcf:
         vcf = "output/{sample}/events/{event}_SVsubset.vcf",
         bed = "output/{sample}/events/{event}_SVsubset.bed"
     conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/subset_vcf.log"
     shell:
         "scripts/lookForSVs.py {input.vcf} {input.reads} {output.vcf} {output.bed}"
 
@@ -91,6 +100,7 @@ rule bedpe:
     output: 
         "output/{sample}/events/{event}_SVsubset.bedpe"
     conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/bedpe.log"
     shell:
         "SURVIVOR vcftobed {input.vcf} 5 -1 {output}"
 
@@ -103,6 +113,8 @@ rule split_summary:
         summary = "output/{sample}/events/summary.txt"
     output:
         "output/{sample}/intType/{event}/event_summary.txt"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/split_summary.log"
     shell:
         "grep {wildcards.event} {input.summary} > {output}"
 
@@ -112,6 +124,8 @@ rule intTest1:
         rep = "output/{sample}/intType/{event}/reads.fasta.out.gff"
     output:
         "output/{sample}/intType/{event}/intTest1.txt"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/intTest1.log"
     shell:
         "SUMMARY={input.summary} REP={input.rep} OUT=output/{wildcards.sample}/intType/{wildcards.event}/twoBreak.bed python scripts/twoBreakTest.py > {output}"
 
@@ -124,6 +138,8 @@ rule bamtobed:
         bam = "output/{sample}/events/{event}.sorted.bam"
     output: 
         "output/{sample}/events/{event}.bed"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/bamtobed.log"
     shell:
         "bedtools bamtobed -i {input.bam} > {output}"
 
@@ -133,6 +149,8 @@ rule breakpointBed:
         summary = "output/{sample}/intType/{event}/event_summary.txt"
     output:
         "output/{sample}/cn/{event}/breakpoint_regions.bed"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/breakpointBed.log"
     shell:
         "OUT={output} BED={input.bed} SUMMARY={input.summary} python scripts/breakpointBed.py"
 
@@ -142,6 +160,8 @@ rule positionDepth:
         bam = "output/{sample}/bam/illumina_wgs.sorted.bam"
     output:
         "output/{sample}/cn/{event}/position_depth.bed"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/positionDepth.log"
     shell:
         "samtools depth {input.bam} -b {input.bed} | awk '{{print $1\"\\t\"$2\"\\t\"$2+1\"\\t\"$3}}' > {output}"
 
@@ -151,6 +171,8 @@ rule regionMeanDepth:
         depth = "output/{sample}/cn/{event}/position_depth.bed"
     output:
         "output/{sample}/cn/{event}/regionsMeanDepth.bed"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/regionMeanDepth.log"
     shell:
         "bedtools map -a {input.bed} -b {input.depth} -c 4 -o mean > {output}"
 
@@ -159,6 +181,8 @@ rule merge:
         bed = "output/{sample}/cn/{event}/breakpoint_regions.bed"
     output: 
         "output/{sample}/cn/{event}/breakpoint_merge.bed"
+    conda: "config/conda.yaml"
+    log: "output/{sample}/log/{event}/merge.log"
     shell:
         "bedtools merge -d 500000 -i {input} > {output}"
 

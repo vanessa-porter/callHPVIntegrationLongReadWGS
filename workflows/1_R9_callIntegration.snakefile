@@ -33,6 +33,7 @@ rule select_HPV_reads:
         bam = lambda w: config["samples"][w.sample]["bam"]
     output:
         "output/{sample}/bam/hpv_read_names.txt"
+    conda: "config/conda.yaml"
     shell:
         "samtools view {input.bam} HPV16 HPV18 HPV26 HPV30 HPV31 HPV33 HPV35 HPV45 HPV51 HPV52 HPV58 HPV59 HPV68 HPV69 HPV73 HPV82 | cut -f1 | sort | uniq - > {output}"
 
@@ -42,6 +43,7 @@ rule filter_HPV_reads:
         bam=lambda w: config["samples"][w.sample]["bam"]
     output:
         "output/{sample}/bam/hpv_reads.bam"
+    conda: "config/conda.yaml"
     shell:
         "picard FilterSamReads -I {input.bam} -O {output} -READ_LIST_FILE {input.names} -FILTER includeReadList -VALIDATION_STRINGENCY SILENT"
 
@@ -50,6 +52,7 @@ rule index_HPV_reads:
         bam="output/{sample}/bam/hpv_reads.bam"
     output:
         "output/{sample}/bam/hpv_reads.bam.bai"
+    conda: "config/conda.yaml"
     shell:
         "samtools index {input.bam}"
 
@@ -60,6 +63,7 @@ rule filter_HPV_methyl_reads:
         bam=lambda w: config["samples"][w.sample]["methyl_bam"]
     output:
         "output/{sample}/bam/methyl_hpv_reads.bam"
+    conda: "config/conda.yaml"
     shell:
         "picard FilterSamReads -I {input.bam} -O {output} -READ_LIST_FILE {input.names} -FILTER includeReadList -VALIDATION_STRINGENCY SILENT"
 
@@ -68,6 +72,7 @@ rule index_HPV_methyl_reads:
         bam="output/{sample}/bam/methyl_hpv_reads.bam"
     output:
         "output/{sample}/bam/methyl_hpv_reads.bam.bai"
+    conda: "config/conda.yaml"
     shell:
         "samtools index {input.bam}"
 
@@ -81,6 +86,7 @@ rule HPV_fasta:
         bam="output/{sample}/bam/hpv_reads.bam"
     output:
         "output/{sample}/bam/hpv_reads.fasta"
+    conda: "config/conda.yaml"
     shell:
         "samtools fasta {input.bam} > {output}"
 
@@ -90,6 +96,7 @@ rule HPV_paf_reads:
         genome=genome_path
     output:
         "output/{sample}/bam/hpv_reads.paf"
+    conda: "config/conda.yaml"
     shell:
         "minimap2 -cx map-ont {input.genome} {input.fasta} > {output}"
 
@@ -104,6 +111,7 @@ rule methyl_hpv_reads:
         tsv=lambda w: config["samples"][w.sample]["methyl"]
     output:
         "output/{sample}/methylation/hpv_reads_methylation.tsv"
+    conda: "config/conda.yaml"
     shell:
         "grep -f {input.names} -F {input.tsv} > {output}"
 
@@ -112,6 +120,7 @@ rule methyl_freq_hpv:
         tsv=lambda w: config["samples"][w.sample]["methyl_freq"]
     output:
         "output/{sample}/methylation/hpv_methylation_frequency.tsv"
+    conda: "config/conda.yaml"
     shell:
         "grep HPV {input.tsv} > {output}"
 
@@ -124,6 +133,7 @@ rule sniffles:
         bam=lambda w: config["samples"][w.sample]["bam"]
     output:
         "output/{sample}/vcf/sniffles_output.vcf"
+    conda: "config/conda.yaml"
     threads: 30
     shell:
         "sniffles --threads {threads} --max_distance 50 --max_num_splits -1 --report_BND --num_reads_report -1 --min_support 5 --min_seq_size 500 -m {input.bam} -v {output}"
@@ -134,6 +144,7 @@ checkpoint call_integration:
 	    paf="output/{sample}/bam/hpv_reads.paf"
     output:
         directory("output/{sample}/events")
+    conda: "config/conda.yaml"
     shell:
         "scripts/callHPVintegration.R -v {input.vcf} -o {output}"
 
@@ -149,6 +160,7 @@ rule event_bams:
         bam="output/{sample}/bam/hpv_reads.bam"
     output:
         "output/{sample}/events/event{i}.bam"
+    conda: "config/conda.yaml"
     shell:
         "picard FilterSamReads -I {input.bam} -O {output} -READ_LIST_FILE {input.names} -FILTER includeReadList -VALIDATION_STRINGENCY SILENT"
 
@@ -157,6 +169,7 @@ rule event_bams_sort:
         bam="output/{sample}/events/event{i}.bam"
     output:
         "output/{sample}/events/event{i}.sorted.bam"
+    conda: "config/conda.yaml"
     shell:
         "sambamba sort {input.bam} > {output}"
 
@@ -165,6 +178,7 @@ rule event_fastq:
         bam="output/{sample}/events/event{i}.sorted.bam"
     output:
         "output/{sample}/events/event{i}.fastq"
+    conda: "config/conda.yaml"
     shell:
         "samtools fastq {input.bam} > {output}"
 
@@ -173,6 +187,7 @@ rule event_fasta:
         bam="output/{sample}/events/event{i}.sorted.bam"
     output:
         "output/{sample}/events/event{i}.fasta"
+    conda: "config/conda.yaml"
     shell:
         "samtools fasta {input.bam} > {output}"
 
@@ -181,6 +196,7 @@ rule event_depth:
         bam="output/{sample}/events/event{i}.sorted.bam"
     output:
         "output/{sample}/depth/event{i}_depth.txt"
+    conda: "config/conda.yaml"
     shell:
         "samtools depth {input.bam} > {output}"
 
@@ -190,6 +206,7 @@ rule site_bams:
         bam="output/{sample}/bam/hpv_reads.bam"
     output:
         "output/{sample}/events/hpv.site{i}.bam"
+    conda: "config/conda.yaml"
     shell:
         "picard FilterSamReads -I {input.bam} -O {output} -READ_LIST_FILE {input.names} -FILTER includeReadList -VALIDATION_STRINGENCY SILENT"
 
@@ -198,6 +215,7 @@ rule site_bams_sort:
         bam="output/{sample}/events/hpv.site{i}.bam"
     output:
         "output/{sample}/events/hpv.site{i}.sorted.bam"
+    conda: "config/conda.yaml"
     shell:
         "sambamba sort {input.bam} > {output}"
 
@@ -206,6 +224,7 @@ rule site_depth:
         bam="output/{sample}/events/hpv.site{i}.sorted.bam"
     output:
         "output/{sample}/depth/hpv.site{i}_depth.txt"
+    conda: "config/conda.yaml"
     shell:
         "samtools depth {input.bam} > {output}"
 
@@ -219,6 +238,7 @@ rule flye:
         fasta="output/{sample}/events/event{i}.fasta"
     output:
         "output/{sample}/asm/event{i}/assembly.fasta"
+    conda: "config/conda.yaml"
     threads: 10
     shell:
         "flye --nano-raw {input.fastq} -i 3 -t {threads} -o output/{wildcards.sample}/asm/event{wildcards.i}"
@@ -233,6 +253,7 @@ rule map_asm_ref_paf:
         genome=genome_path
     output:
         "output/{sample}/asm/event{i}/assembly.hybrid.paf"
+    conda: "config/conda.yaml"
     shell:
         "minimap2 -x asm5 {input.genome} {input.fasta} > {output}"
 
@@ -242,6 +263,7 @@ rule map_reads_asm_paf:
         asm="output/{sample}/asm/event{i}/assembly.fasta"
     output:
         "output/{sample}/asm/event{i}/reads.asm.paf"
+    conda: "config/conda.yaml"
     shell:
         "minimap2 -L --MD -Y -x map-ont {input.asm} {input.reads} > {output}"
 
@@ -255,6 +277,7 @@ rule map_reads_asm_sam:
         asm="output/{sample}/asm/event{i}/assembly.fasta"
     output:
         "output/{sample}/asm/event{i}/reads.asm.sam"
+    conda: "config/conda.yaml"
     shell:
         "minimap2 -L --MD -Y -ax map-ont {input.asm} {input.reads} > {output}"
 
@@ -263,6 +286,7 @@ rule view_reads_asm:
         sam="output/{sample}/asm/event{i}/reads.asm.sam"
     output:
         "output/{sample}/asm/event{i}/reads.asm.bam"
+    conda: "config/conda.yaml"
     shell:
         "samtools view -S -b {input.sam} > {output}"
 
@@ -271,6 +295,7 @@ rule sort_reads_asm:
         bam="output/{sample}/asm/event{i}/reads.asm.bam"
     output:
         "output/{sample}/asm/event{i}/reads.asm.sorted.bam"
+    conda: "config/conda.yaml"
     shell:
         "sambamba sort {input.bam}"
 
@@ -279,6 +304,7 @@ rule asm_sniffles:
         bam="output/{sample}/asm/event{i}/reads.asm.sorted.bam"
     output:
         "output/{sample}/asm/event{i}/sniffles_asm.vcf"
+    conda: "config/conda.yaml"
     threads: 5
     shell:
         "sniffles --threads {threads} --max_distance 50 --max_num_splits -1 --report_BND --num_reads_report -1 --min_support 3 --min_seq_size 500 -m {input.bam} -v {output}"

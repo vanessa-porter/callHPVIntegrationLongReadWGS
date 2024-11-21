@@ -29,6 +29,7 @@ rule cp_dmr:
         dmr = lambda w: config["samples"][w.sample]["dmr"]
     output:
         "output/{sample}/methylation/diff_meth.csv"
+    conda: "config/conda.yaml"
     shell:
         """
         cp {input.dmr} output/{wildcards.sample}/methylation/diff_meth.csv.gz
@@ -40,6 +41,7 @@ rule hpv_int_dist_merge:
         "output/{sample}/events/hpv_integration_sites.bed"
     output:
         "output/{sample}/events/hpv_integration_events_distance.bed"
+    conda: "config/conda.yaml"
     shell:
         "bedtools sort -i {input} | bedtools merge -d 500000 -i - -c 4 -o distinct > {output}"
 
@@ -48,6 +50,7 @@ rule hpv_int_dist_txt:
         "output/{sample}/events/hpv_integration_events_distance.bed"
     output:
         "output/{sample}/events/hpv_integration_events_dist.txt"
+    conda: "config/conda.yaml"
     shell:
         "scripts/distIdentifierHPVEvents.py SAMPLE={input}"
 
@@ -57,7 +60,8 @@ rule dmr_hotspots:
         hpv="output/{sample}/events/hpv_integration_events_distance.bed"
     output:
         "output/{sample}/methylation/densityDMRHotspotsRegions.bed",
-        "output/{sample}/methylation/densityPlotDMRs.png",
+        "output/{sample}/methylation/densityPlotDMRs.png"
+    conda: "config/conda.yaml"
     shell:
         "scripts/callDMRHotspots.R -d {input.dmr} -v {input.hpv} -o output/{wildcards.sample}/methylation"
 
@@ -66,6 +70,7 @@ rule sort:
         dmr="output/{sample}/methylation/densityDMRHotspotsRegions.bed"
     output:
         "output/{sample}/methylation/densityDMRHotspotsRegions.sorted.bed"
+    conda: "config/conda.yaml"
     shell:
         "bedtools sort -i {input.dmr} > {output}"
 
@@ -75,6 +80,7 @@ rule intersect:
         hpv="output/{sample}/events/hpv_integration_events_distance.bed"
     output:
         "output/{sample}/methylation/dmrHotspotIntersectHPV.bed"
+    conda: "config/conda.yaml"
     shell:
         "bedtools intersect -wao -a {input.hpv} -b {input.dmr} > {output}"
 
@@ -84,6 +90,7 @@ rule intersect_wa:
         hpv="output/{sample}/events/hpv_integration_events_distance.bed"
     output:
         "output/{sample}/methylation/dmrHotspotIntersectHPV-wa.bed"
+    conda: "config/conda.yaml"
     shell:
         "bedtools intersect -wa -a {input.hpv} -b {input.dmr} > {output}"
 
@@ -92,6 +99,7 @@ rule make_bed:
         dmr = "output/{sample}/methylation/diff_meth.csv"
     output:
         "output/{sample}/methylation/dmr.sorted.bed"
+    conda: "config/conda.yaml"
     shell:
         "cat {input.dmr} | tail -n +2 | cut -f 1-3 | grep -v ""e"" | bedtools sort -i - > {output}"
 
@@ -101,6 +109,7 @@ rule intersect_cpg:
         cpg="tables/hg38_cpg_islands.bed"
     output:
         "output/{sample}/methylation/cpg_island_methyl_freq.bed"
+    conda: "config/conda.yaml"
     shell:
         "zcat {input.freq} | tail -n +2 | bedtools intersect -wo -a stdin -b {input.cpg} | cut -f 1-8,12 > {output}"
 
@@ -110,6 +119,7 @@ rule average_Cpg:
 
     output:
         "output/{sample}/methylation/cpg_island_methyl_average.txt"
+    conda: "config/conda.yaml"
     shell:
         "python scripts/cpgIslandAverageR9.py {input.freq} {output}"
 
