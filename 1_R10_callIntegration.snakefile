@@ -65,8 +65,7 @@ rule index_HPV_reads:
 rule HPV_fasta:
     input:
         bai="output/{sample}/bam/hpv_reads.bam.bai",
-        bam="output/{sample}/bam/hpv_reads.bam",
-        genome=genome_path
+        bam="output/{sample}/bam/hpv_reads.bam"
     output:
         "output/{sample}/bam/hpv_reads.fasta"
     conda: "config/conda.yaml"
@@ -76,7 +75,8 @@ rule HPV_fasta:
 
 rule HPV_paf_reads:
     input:
-        fasta="output/{sample}/bam/hpv_reads.fasta"
+        fasta="output/{sample}/bam/hpv_reads.fasta",
+        genome=genome_path
     output:
         "output/{sample}/bam/hpv_reads.paf"
     conda: "config/conda.yaml"
