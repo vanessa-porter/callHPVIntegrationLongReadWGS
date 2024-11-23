@@ -1,12 +1,17 @@
 #!/usr/bin/env Rscript
 
+# Specify a CRAN mirror
+cran_mirror <- "https://cran.r-project.org"
+
 # install packages
 list.of.packages <- c("optparse", "reshape2", "ggplot2", "tidyr", "stringr","dplyr","pafr", "bedtoolsr")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-if(length(new.packages)) install.packages(new.packages)
+
+if (length(new.packages)) {
+  install.packages(new.packages, repos = cran_mirror)
+}
 
 # load packages
-library(optparse)
 suppressMessages(library(optparse))
 suppressMessages(library(reshape2))
 suppressMessages(library(ggplot2))
@@ -82,7 +87,7 @@ if (nrow(tra[grep("HPV",tra$chr2),]) == 0)  {
   # save summary file
   write.table(events, file = paste0(outdir,"/summary.txt"), sep = "\t", quote = F, col.names = T, row.names = F)
   
-} else  if (nrow(tra[grep("HPV",tra$chr2),]) == 1) {
+} else if (nrow(tra[grep("HPV",tra$chr2),]) == 1) {
   
   print("This sample has 1 HPV integration site with 5+ reads")
   
@@ -414,4 +419,4 @@ if (nrow(tra[grep("HPV",tra$chr2),]) == 0)  {
   events_bed <- events[,c(1,2,2,5)]
   events_bed$pos.1 <- events_bed$pos.1 + 1
   write.table(events_bed, file = paste0(outdir,"/hpv_integration_sites.bed"), sep = "\t", quote = F, col.names = F, row.names = F)
-  
+}
