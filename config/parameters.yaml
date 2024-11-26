@@ -1,7 +1,6 @@
 ### Genome version considerations
 
 # genome_name should match bams
-GENOME_PATH: "path/to/hg38_no_alt_TCGA_HTMCP_HPVs.fa"
-GENOME_MMI: "path/to/hg38_no_alt_TCGA_HTMCP_HPVs.mmi"
-GENES_PATH: "path/to/GRCh38.100/genes.gtf"
-CHROM_SIZE_PATH: "/path/to/chromsizes"
+GENOME_PATH: "/path/to/hg38_no_alt_TCGA_HTMCP_HPVs/genome/fasta/hg38_no_alt_TCGA_HTMCP_HPVs.fa"
+GENOME_MMI: "/path/to/hg38_no_alt_TCGA_HTMCP_HPVs/genome/minimap2-2.15-map-ont/hg38_no_alt_TCGA_HTMCP_HPVs_map-ont.mmi"
+GENES_PATH: "/path/to/GRCh38.100/genes.gtf"

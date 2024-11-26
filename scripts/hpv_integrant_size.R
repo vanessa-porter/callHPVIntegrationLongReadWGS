@@ -1,5 +1,8 @@
 #!/usr/bin/env Rscript
 
+# Specify a CRAN mirror
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+
 # install packages
 list.of.packages <- c("optparse", "reshape2", "ggplot2", "tidyr", "stringr","dplyr","pafr", "RColorBrewer", "tidyverse", "ggsci")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]

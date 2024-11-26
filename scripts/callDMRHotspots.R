@@ -3,8 +3,10 @@
 ### ----------------------------------------------------------
 ### OptParse Options
 ### ----------------------------------------------------------
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+
 # install packages
-list.of.packages <- c("optparse")
+list.of.packages <- c("optparse", "GenomicRanges", "dplyr", "ggplot2", "tidyr")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 

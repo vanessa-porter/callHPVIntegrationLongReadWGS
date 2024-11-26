@@ -9,6 +9,10 @@ events = [f for f in os.listdir(intPath) if not f.startswith('.')]
 # check if the events have two breaks
 eventsPath = [intPath + s for s in events]
 
+## Load config values
+configfile: "config/samples.yaml"
+configfile: "config/parameters.yaml"
+
 # genes
 gene_gff = config["GENES_PATH"]
 
@@ -54,7 +58,6 @@ rule event_bed:
         "output/{sample}/intType/{event}/event_summary.txt"
     output: 
         "output/{sample}/intType/{event}/{event}_region.bed"
-    conda: "config/conda.yaml"
     log: "output/{sample}/log/{event}/int_depth.log"
     run:
         df = pd.read_csv(input[0], sep='\t', lineterminator='\n', names = ["chr","pos","HPVchr","HPVpos","HPV.site","event","VAF","read.depth"])
@@ -90,7 +93,6 @@ rule genic_test:
         part_genic = "output/{sample}/intType/{event}/genic_test/partial_genic.bed"
     output: 
         "output/{sample}/intType/{event}/genic_test/event_location.txt"
-    conda: "config/conda.yaml"
     log: "output/{sample}/log/{event}/genic_test.log"
     run:
         t1 = os.stat(input.genic).st_size == 0
@@ -130,7 +132,6 @@ rule regionize_event:
         "output/{sample}/intType/{event}/{event}_region.bed"
     output:
         "output/{sample}/intType/{event}/{event}_regions_updown.bed"
-    conda: "config/conda.yaml"
     log: "output/{sample}/log/{event}/regionize_event.log"
     run:
         df = pd.read_csv(input[0], sep='\t', lineterminator='\n', names = ["chr","start","end"])

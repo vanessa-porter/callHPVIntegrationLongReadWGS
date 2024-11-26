@@ -47,7 +47,7 @@ rule repeat_master:
     log: "output/{sample}/log/{event}/repeat_master.log"
     threads: 20
     shell:
-        "singularity exec -B /projects,/home RepeatMasker {input.fasta} -pa {threads} -gff -species human"
+        "RepeatMasker {input.fasta} -pa {threads} -gff -species human"
 
 ### -------------------------------------------------------------------
 ### Subset the methylation by event 
@@ -59,7 +59,7 @@ rule hpv_methyl_freq:
     output:
         "output/{sample}/methylation/event_methyl_freq.tsv"
     conda: "config/conda.yaml"
-    log: "output/{sample}/log/{event}/hpv_methyl_freq.log"
+    log: "output/{sample}/log/hpv_methyl_freq.log"
     shell: 
         "scripts/eventMethylationNewChemistry.R -m {input.tsv} -d output/{wildcards.sample}/events -o {output}"
 
@@ -74,7 +74,7 @@ rule hpv_integrant_size:
     output:
         "output/{sample}/hpv_size/hpvSizeCategories.txt"
     conda: "config/conda.yaml"
-    log: "output/{sample}/log/{event}/hpv_integrant_size.log"
+    log: "output/{sample}/log/hpv_integrant_size.log"
     shell: 
         "scripts/hpv_integrant_size.R -p {input.paf} -s {input.summary} -o output/{wildcards.sample}/hpv_size"
 

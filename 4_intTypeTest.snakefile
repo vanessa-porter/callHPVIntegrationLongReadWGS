@@ -15,6 +15,10 @@ for d in eventsPath:
             e = d.replace(asmPath, "")
             eventsASM.append(e)
 
+## Load config values
+configfile: "config/samples.yaml"
+configfile: "config/parameters.yaml"
+
 REF = config["GENOME_MMI"]
 
 ### -------------------------------------------------------------------
